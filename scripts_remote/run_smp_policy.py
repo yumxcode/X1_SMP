@@ -84,10 +84,16 @@ def start_checkpoint_exporter(exp_name, branch, keep_n=3):
             print(f"[exporter] write-tree rc={t.returncode}", flush=True)
             return False
         tree = t.stdout.strip()
+        ident = {"GIT_AUTHOR_NAME": "ckpt-exporter",
+                 "GIT_AUTHOR_EMAIL": "trainer@gradmotion",
+                 "GIT_COMMITTER_NAME": "ckpt-exporter",
+                 "GIT_COMMITTER_EMAIL": "trainer@gradmotion"}
+        ident.update(env)
         c = sh(["git", "commit-tree", tree, "-m",
-                f"ckpts {time.strftime('%H:%M:%S')}"])
+                f"ckpts {time.strftime('%H:%M:%S')}"], env=ident)
         if c.returncode != 0:
-            print(f"[exporter] commit-tree rc={c.returncode}", flush=True)
+            print(f"[exporter] commit-tree rc={c.returncode} "
+                  f"{c.stderr[-200:]}", flush=True)
             return False
         commit = c.stdout.strip()
         sh(["git", "update-ref", f"refs/heads/{branch}", commit])
@@ -146,7 +152,13 @@ try:
     sh(["git", "add", "-f", "--all", staging], env=env)
     t = sh(["git", "write-tree"], env=env)
     if t.returncode == 0:
-        c = sh(["git", "commit-tree", t.stdout.strip(), "-m", "final model"])
+        ident = {"GIT_AUTHOR_NAME": "ckpt-exporter",
+                 "GIT_AUTHOR_EMAIL": "trainer@gradmotion",
+                 "GIT_COMMITTER_NAME": "ckpt-exporter",
+                 "GIT_COMMITTER_EMAIL": "trainer@gradmotion"}
+        ident["GIT_INDEX_FILE"] = tmp_index
+        c = sh(["git", "commit-tree", t.stdout.strip(), "-m", "final model"],
+               env=ident)
         if c.returncode == 0:
             branch = os.environ.get("X1_CKPT_BRANCH", "ckpt_x1_smp")
             sh(["git", "update-ref", f"refs/heads/{branch}", c.stdout.strip()])
