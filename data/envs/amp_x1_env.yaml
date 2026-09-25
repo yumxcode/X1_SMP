@@ -1,0 +1,41 @@
+env_name: "amp"
+
+char_file: "data/assets/x1/x1.xml"
+camera_mode: "track"
+
+episode_length: 10.0 # seconds
+global_obs: True
+root_height_obs: True
+pose_termination: False
+enable_phase_obs: False
+enable_tar_obs: False
+num_disc_obs_steps: 10
+rand_reset: True
+zero_center_action: True
+
+ref_char_offset: [2.0, 0.0, 0.0] # m
+# [root pos 3, root rot expmap 3, 29 dof] - X1 depth-first home pose
+init_pose: [0, 0, 0.6141, 0, 0, 0,
+            0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0,
+            0.48891, 0.06213, -0.33853, 0.63204, -0.27224, 0,
+            -0.48891, -0.06213, 0.33853, 0.63204, -0.27224, 0]
+
+enable_early_termination: True
+key_bodies: ["left_ankle_roll_link", "right_ankle_roll_link", "lumbar_pitch_link", "left_wrist_roll_link", "right_wrist_roll_link"]
+contact_bodies: ["left_knee_pitch_link", "left_ankle_pitch_link", "left_ankle_roll_link", "right_knee_pitch_link", "right_ankle_pitch_link", "right_ankle_roll_link"]
+
+motion_file: "data/datasets/dataset_x1_run.yaml"
+
+reward_pose_w: 0.5
+reward_vel_w: 0.1
+reward_root_pose_w: 0.15
+reward_root_vel_w: 0.1
+reward_key_pos_w: 0.15
+
+reward_pose_scale: 0.25
+reward_vel_scale: 0.01
+reward_root_pose_scale: 5.0
+reward_root_vel_scale: 1.0
+reward_key_pos_scale: 10.0

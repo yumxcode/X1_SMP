@@ -1,0 +1,7 @@
+motions:
+  - file: "data/motions/x1/x1_sprint1_subject2_seg0.pkl"
+    weight: 1.5
+  - file: "data/motions/x1/x1_sprint1_subject4_seg0.pkl"
+    weight: 1.5
+  - file: "data/motions/x1/x1_sprint1_subject4_seg3.pkl"
+    weight: 2.0
