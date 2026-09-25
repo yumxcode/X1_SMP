@@ -63,6 +63,14 @@ def start_checkpoint_exporter(exp_name, branch, keep_n=3):
             os.remove(f)
         for f in files[-keep_n:]:
             shutil.copyfile(f, os.path.join(staging, os.path.basename(f)))
+        # gm_play/: the SDK-blessed PT upload dir (per platform docs CSVs
+        # must be packed as .pt there to be uploaded) -> mirror checkpoints
+        gm_play = os.path.join(ROOT, "logs", exp_name, "gm_play")
+        os.makedirs(gm_play, exist_ok=True)
+        for f in glob.glob(os.path.join(gm_play, "*.pt")):
+            os.remove(f)
+        for f in files[-keep_n:]:
+            shutil.copyfile(f, os.path.join(gm_play, os.path.basename(f)))
         dirty["v"] = True
 
     def git_push():
