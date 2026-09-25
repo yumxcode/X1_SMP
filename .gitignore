@@ -5,3 +5,8 @@ __pycache__/
 output/
 .vscode/
 wandb/
+.research/
+.gmhome/
+output/
+ckpt_git/
+logs/
