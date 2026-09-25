@@ -174,6 +174,7 @@ def build(tolerance=0.0):
                 kp, kd = pd_gains(lim["effort"])
                 je = ET.SubElement(body_el, "joint", {
                     "name": jname, "type": "hinge",
+                    "limited": "true",  # Isaac Gym MJCF parser needs explicit
                     "pos": jx.attrib.get("pos", "0 0 0"),
                     "axis": jx.attrib["axis"],
                     "range": f"{lim['low']:.4f} {lim['high']:.4f}",
@@ -261,7 +262,7 @@ def build(tolerance=0.0):
         return body_el
 
     out_root = ET.Element("mujoco", model="x1")
-    ET.SubElement(out_root, "compiler", angle="radian", autolimits="true")
+    ET.SubElement(out_root, "compiler", angle="radian")
     dflt = ET.SubElement(out_root, "default")
     ET.SubElement(dflt, "motor", ctrlrange="-1 1", ctrllimited="true")
     world = ET.SubElement(out_root, "worldbody")
