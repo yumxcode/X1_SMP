@@ -5,3 +5,5 @@
 --agent_config data/agents/smp_x1_agent.yaml
 --visualize false
 --out_dir output/
+--save_int_models true
+--max_samples 600000000
