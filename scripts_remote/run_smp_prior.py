@@ -13,6 +13,8 @@ subprocess.check_call([sys.executable, "-m", "pip", "install", "-q",
                        "filelock", "importlib-metadata", "zipp",
                        "typing-extensions", "cloudpickle", "regex",
                        "tqdm", "safetensors", "requests"])
+sys.path.insert(0, os.path.join(ROOT, "mimickit"))
+sys.path.insert(0, ROOT)
 sys.argv = ["train_tinymdm.py",
             "--cfg_path", "tools/diffusion_model/config/tinymdm_x1_run.yaml",
             "--out_dir", "output/smp_prior_x1"]

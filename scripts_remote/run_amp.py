@@ -13,6 +13,8 @@ subprocess.check_call([sys.executable, "-m", "pip", "install", "-q",
                        "filelock", "importlib-metadata", "zipp",
                        "typing-extensions", "cloudpickle", "regex",
                        "tqdm", "safetensors", "requests"])
+sys.path.insert(0, os.path.join(ROOT, "mimickit"))
+sys.path.insert(0, ROOT)
 sys.argv = ["run.py", "--mode", "train", "--num_envs", "4096",
             "--engine_config", "data/engines/isaac_gym_engine.yaml",
             "--env_config", "data/envs/amp_x1_env.yaml",
