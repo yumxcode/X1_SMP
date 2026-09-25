@@ -22,5 +22,7 @@ sys.argv = ["run.py", "--mode", "train", "--num_envs", "4096",
             "--engine_config", "data/engines/isaac_gym_engine.yaml",
             "--env_config", "data/envs/amp_x1_env.yaml",
             "--agent_config", "data/agents/amp_x1_agent.yaml",
-            "--visualize", "false", "--out_dir", "output/"]
+            "--visualize", "false", "--out_dir", "output/",
+            "--save_int_models", "true",
+            "--max_samples", "500000000"]
 runpy.run_path(os.path.join(ROOT, "mimickit", "run.py"), run_name="__main__")
