@@ -7,12 +7,15 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 os.chdir(ROOT)
 # offline deps: container network blocks pypi; wheels are vendored in repo
 subprocess.check_call([sys.executable, "-m", "pip", "install", "-q",
-                       "--no-index", "--find-links",
+                       "--no-index", "--no-deps", "--find-links",
                        os.path.join(ROOT, "vendor_wheels"),
-                       "gymnasium", "diffusers", "huggingface-hub",
-                       "filelock", "importlib-metadata", "zipp",
-                       "typing-extensions", "cloudpickle", "regex",
-                       "tqdm", "safetensors", "requests"])
+                       "gymnasium", "farama-notifications", "cloudpickle",
+                       "diffusers", "huggingface-hub", "filelock",
+                       "importlib-metadata", "zipp", "packaging",
+                       "typing-extensions", "regex", "tqdm", "safetensors",
+                       "requests", "matplotlib", "contourpy", "cycler",
+                       "fonttools", "kiwisolver", "pyparsing",
+                       "python-dateutil", "six", "tensorboardX", "protobuf"])
 sys.path.insert(0, os.path.join(ROOT, "mimickit"))
 sys.path.insert(0, ROOT)
 sys.argv = ["run.py", "--mode", "train", "--num_envs", "4096",
