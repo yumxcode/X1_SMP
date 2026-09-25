@@ -116,9 +116,10 @@ class Policy:
         norm_obs = (obs - self.obs_mean) / (self.obs_std + 1e-8)
         norm_obs = np.clip(norm_obs, -10, 10)
         with torch.no_grad():
-            h = self.act(norm_obs @ self.l1_w.T + self.l1_b)
+            x = torch.tensor(norm_obs, dtype=torch.float32).unsqueeze(0)
+            h = self.act(x @ self.l1_w.T + self.l1_b)
             h = self.act(h @ self.l2_w.T + self.l2_b)
-            norm_a = h @ self.h_w.T + self.h_b  # mode (mean) of Gaussian
+            norm_a = (h @ self.h_w.T + self.h_b).numpy()[0]  # Gaussian mode
         a = norm_a * self.a_std + self.a_mean
         return a
 
@@ -193,10 +194,11 @@ class Sim2Sim:
         d = self.d
         root_pos = d.qpos[:3].copy()
         root_quat = d.qpos[3:7].copy()  # wxyz
-        # world-frame velocities at root (mujoco gives local)
+        # MuJoCo free joint: linear vel in WORLD frame; angular vel in
+        # LOCAL body frame (well-known quirk) -> convert to world both
         R = d.xmat[self.root_bid].reshape(3, 3)
-        root_vel = R.T @ d.qvel[:3]
-        root_w = R.T @ d.qvel[3:6]
+        root_vel = d.qvel[:3].copy()
+        root_w = R @ d.qvel[3:6]
         jr = self.joint_quats()
         dv = d.qvel[self.vadr].copy()
         key = d.xpos[self.key_body_ids].copy()
@@ -252,10 +254,13 @@ class Sim2Sim:
 def detect_strikes(z, base_margin=0.045, fps=30):
     base = np.quantile(z, 0.02)
     c = z < base + base_margin
-    # debounce 3 frames
+    # debounce: keep runs >= 3 frames
     out = np.zeros_like(c)
     i = 0
     while i < len(c):
+        if not c[i]:
+            i += 1
+            continue
         j = i
         while j < len(c) and c[j]:
             j += 1
