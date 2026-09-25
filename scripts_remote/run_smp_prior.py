@@ -4,9 +4,18 @@ import sys
 import runpy
 
 import subprocess, sys
-subprocess.check_call([sys.executable, "-m", "pip", "install", "-q",
-                       "gymnasium", "diffusers>=0.36.0", "moviepy",
-                       "matplotlib", "pyyaml", "tensorboardX"])
+# default pypi unreachable from the container; use mirrors with fallback
+for idx in ("-i https://pypi.tuna.tsinghua.edu.cn/simple",
+            "-i https://mirrors.aliyun.com/pypi/simple/"):
+    try:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-q",
+                               idx, "gymnasium", "diffusers>=0.36.0",
+                               "moviepy", "matplotlib", "pyyaml",
+                               "tensorboardX"])
+        break
+    except subprocess.CalledProcessError:
+        continue
+
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 os.chdir(ROOT)
