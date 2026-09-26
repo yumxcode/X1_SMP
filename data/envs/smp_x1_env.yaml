@@ -26,4 +26,4 @@ enable_early_termination: True
 key_bodies: ["left_ankle_roll_link", "right_ankle_roll_link", "lumbar_pitch_link", "left_wrist_roll_link", "right_wrist_roll_link"]
 contact_bodies: ["left_knee_pitch_link", "left_ankle_pitch_link", "left_ankle_roll_link", "right_knee_pitch_link", "right_ankle_pitch_link", "right_ankle_roll_link"]
 
-motion_file: "data/datasets/dataset_x1_run.yaml"
+motion_file: "data/datasets/dataset_x1_run_v2.yaml"

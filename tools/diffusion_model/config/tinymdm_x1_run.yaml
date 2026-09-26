@@ -24,7 +24,7 @@ output_iter: 2_000
 grad_clip_norm: 1.0
 
 env_config: "data/envs/smp_x1_env.yaml"
-motion_file: "data/datasets/dataset_x1_run.yaml"
+motion_file: "data/datasets/dataset_x1_run_v2.yaml"
 control_freq: 30
 
 master_port: '11435'

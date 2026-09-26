@@ -1,0 +1,23 @@
+motions:
+  - file: "data/motions/x1_v2/x1_run1_subject5_seg0.pkl"
+    weight: 1.0
+  - file: "data/motions/x1_v2/x1_run2_subject1_seg1.pkl"
+    weight: 1.0
+  - file: "data/motions/x1_v2/x1_run2_subject1_seg2.pkl"
+    weight: 1.0
+  - file: "data/motions/x1_v2/x1_run2_subject4_seg0.pkl"
+    weight: 1.0
+  - file: "data/motions/x1_v2/x1_run2_subject4_seg1.pkl"
+    weight: 1.0
+  - file: "data/motions/x1_v2/x1_run2_subject4_seg2.pkl"
+    weight: 1.0
+  - file: "data/motions/x1_v2/x1_sprint1_subject2_seg0.pkl"
+    weight: 1.5
+  - file: "data/motions/x1_v2/x1_sprint1_subject4_seg0.pkl"
+    weight: 1.5
+  - file: "data/motions/x1_v2/x1_sprint1_subject4_seg1.pkl"
+    weight: 1.5
+  - file: "data/motions/x1_v2/x1_sprint1_subject4_seg2.pkl"
+    weight: 1.5
+  - file: "data/motions/x1_v2/x1_sprint1_subject4_seg3.pkl"
+    weight: 1.5
