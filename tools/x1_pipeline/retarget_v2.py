@@ -505,6 +505,21 @@ def main():
                              k5, mode="valid")
         lift = np.minimum(np.maximum(lift, lift_s), 0.15)
         base_p[:, 2] += lift
+        # stance snap-down: the lift above only pushes UP. Scaled foot
+        # targets often float 3-6 cm through stance (p10 sole z 2.2 cm on
+        # measured failures — feet never plant), which breaks the step
+        # rhythm (R1: X1 detects 3 spurious strikes, stances hover). For
+        # frames whose lowest sole is already near ground (<5 cm) lower
+        # the base so the sole reaches 2 mm; median-filtered, capped, and
+        # never applied while clearly airborne.
+        snap = np.clip(0.002 - minz_i, -0.05, 0.0)
+        snap[minz_i > 0.05] = 0.0
+        if n_out >= 7:
+            k7 = np.ones(7) / 7
+            snap_s = np.convolve(
+                np.r_[snap[:3][::-1], snap, snap[-3:][::-1]], k7, mode="valid")
+            snap = np.minimum(snap, snap_s)
+        base_p[:, 2] += snap
         return base_p, dof_out, crit_ratio
 
     def save_result(warp_f, n_out_f, base_f, rootq_f, dof_f):
