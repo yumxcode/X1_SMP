@@ -8,6 +8,17 @@ import shutil
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 os.chdir(ROOT)
+# offline deps: container network blocks pypi; wheels are vendored in repo
+subprocess.check_call([sys.executable, "-m", "pip", "install", "-q",
+                       "--no-index", "--no-deps", "--find-links",
+                       os.path.join(ROOT, "vendor_wheels"),
+                       "gymnasium", "farama-notifications", "cloudpickle",
+                       "diffusers", "huggingface-hub", "filelock",
+                       "importlib-metadata", "zipp", "packaging",
+                       "typing-extensions", "regex", "tqdm", "safetensors",
+                       "requests", "matplotlib", "contourpy", "cycler",
+                       "fonttools", "kiwisolver", "pyparsing",
+                       "python-dateutil", "six", "tensorboardX", "protobuf"])
 
 EXP_ID = time.strftime("%H%M%S")
 
