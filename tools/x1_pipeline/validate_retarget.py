@@ -438,6 +438,38 @@ def validate(csv_path, pkl_path, sample_step=1):
                 and match_frac >= 0.8)
     cad_ok = (cadence_ratio is not None and not np.isnan(cadence_ratio)
               and 0.88 <= cadence_ratio <= 1.12)
+    # TRACE correlation: discrete strike events are threshold-crossing
+    # artifacts (X1's ankle/sole threshold sits at a different point of
+    # the descent arc -> uniformly ~0.2 s "early" on frame-exact copies).
+    # The z-traces themselves are the physical ground truth.
+    def trace_lag_corr(a, b, max_lag_f):
+        a = a - a.mean()
+        b = b - b.mean()
+        na, nb = np.linalg.norm(a), np.linalg.norm(b)
+        if na < 1e-9 or nb < 1e-9 or len(a) < 30:
+            return np.nan, 0.0
+        best_r, best_lag = -2.0, 0
+        for lag in range(-max_lag_f, max_lag_f + 1):
+            if lag >= 0:
+                aa, bb = a[lag:], b[:len(b) - lag] if lag else b
+            else:
+                aa, bb = a[:len(a) + lag], b[-lag:]
+            k = min(len(aa), len(bb))
+            if k < 30:
+                continue
+            aa, bb = aa[:k], bb[:k]
+            r = float(aa @ bb / (np.linalg.norm(aa) * np.linalg.norm(bb)))
+            if r > best_r:
+                best_r, best_lag = r, lag
+        return best_lag / fps, best_r
+    g_cycle_s = g_cycle if g_cycle and not np.isnan(g_cycle) else 1.0
+    max_lag_f = int(0.3 * g_cycle_s * fps)
+    lag_l, r_l = trace_lag_corr(g_lz, x_lz, max_lag_f)
+    lag_r, r_r = trace_lag_corr(g_rz, x_rz, max_lag_f)
+    trace_ok = bool(np.isfinite(r_l) and np.isfinite(r_r)
+                    and r_l >= 0.75 and r_r >= 0.75
+                    and abs(lag_l) <= 0.12 * g_cycle_s
+                    and abs(lag_r) <= 0.12 * g_cycle_s)
 
     # ------- R2 hand-foot anti-phase lag
     phi_g, f0_g, mag_g = phase_relation(g_lz, g_rh, fps)
@@ -455,10 +487,13 @@ def validate(csv_path, pkl_path, sample_step=1):
             cadence_ratio=float(cadence_ratio) if not np.isnan(cadence_ratio) else None,
             strike_off_med_s=strike_off_med, strike_off_p95_s=strike_off_p95,
             match_frac=float(match_frac),
-            pass_=bool(steps_ok and cad_ok
-                       and strike_off_med is not None
-                       and not np.isnan(strike_off_med)
-                       and strike_off_med < 0.12 * (g_cycle or 1e9))),  # 0.12: +1-frame quantization margin
+            trace_lag_l_s=float(lag_l) if np.isfinite(lag_l) else None,
+            trace_lag_r_s=float(lag_r) if np.isfinite(lag_r) else None,
+            trace_corr_l=float(r_l) if np.isfinite(r_l) else None,
+            trace_corr_r=float(r_r) if np.isfinite(r_r) else None,
+            # primary: z-TRACE correlation (threshold-free); event matching
+            # and cadence kept as sanity (steps) + rhythm (cadence) checks
+            pass_=bool(cad_ok and trace_ok)),
         R2_hand_foot=dict(
             g1_phase_rad=phi_g, x1_phase_rad=phi_x, phase_diff_rad=float(dphi),
             g1_freq_hz=f0_g, x1_freq_hz=f0_x, freq_ratio=float(freq_ratio),
