@@ -24,9 +24,10 @@ EXP_ID = time.strftime("%H%M%S")
 
 
 def start_prior_exporter():
-    """tinymdm overwrites output/smp_prior_x1/model.pt every output_iter;
-    snapshot it to top-level output/*.pt (the only live upload channel)
-    every 5 min + a final copy at exit."""
+    """tinymdm overwrites output/smp_prior_x1/model.pt every output_iter.
+    SDK registers the dir of the FIRST .pt event as its only scan dir — for
+    this task that is output/smp_prior_x1 (tinymdm's own first save), so
+    snapshots MUST live in that same dir with unique names to get uploaded."""
     src = os.path.join(ROOT, "output", "smp_prior_x1", "model.pt")
 
     def loop():
@@ -34,7 +35,8 @@ def start_prior_exporter():
             try:
                 if os.path.exists(src):
                     dst = os.path.join(
-                        ROOT, "output", f"prior_snap_{EXP_ID}_{int(time.time())}.pt")
+                        ROOT, "output", "smp_prior_x1",
+                        f"prior_snap_{EXP_ID}_{int(time.time())}.pt")
                     shutil.copyfile(src, dst)
                     print(f"[exporter] prior snapshot -> {os.path.basename(dst)}",
                           flush=True)
@@ -56,13 +58,13 @@ sys.argv = ["train_tinymdm.py",
 runpy.run_path(os.path.join(ROOT, "tools", "diffusion_model",
                             "train_tinymdm.py"), run_name="__main__")
 
-# natural end: final prior weights through the same top-level channel
+# natural end: final prior weights through the same registered scan dir
 try:
     src = os.path.join(ROOT, "output", "smp_prior_x1", "model.pt")
-    dst = os.path.join(ROOT, "output", "prior_final.pt")
+    dst = os.path.join(ROOT, "output", "smp_prior_x1", "prior_final.pt")
     if os.path.exists(src):
         shutil.copyfile(src, dst)
-        print("[exporter] final prior -> output/prior_final.pt", flush=True)
+        print("[exporter] final prior -> smp_prior_x1/prior_final.pt", flush=True)
         time.sleep(90)  # let the SDK upload it before the container dies
 except Exception as e:
     print(f"[exporter] final error: {e}", flush=True)
