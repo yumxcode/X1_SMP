@@ -20,6 +20,9 @@ import shutil
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 os.chdir(ROOT)
+# mimickit modules must be importable BEFORE the robustness patches below
+sys.path.insert(0, os.path.join(ROOT, "mimickit"))
+sys.path.insert(0, ROOT)
 subprocess.check_call([sys.executable, "-m", "pip", "install", "-q",
                        "--no-index", "--no-deps", "--find-links",
                        os.path.join(ROOT, "vendor_wheels"),
@@ -143,8 +146,6 @@ def apply_robustness_patches():
 start_checkpoint_exporter(os.environ.get("X1_EXPORT_PREFIX", "smp"))
 apply_robustness_patches()
 
-sys.path.insert(0, os.path.join(ROOT, "mimickit"))
-sys.path.insert(0, ROOT)
 sys.argv = ["run.py", "--mode", "train", "--num_envs", "4096",
             "--engine_config", "data/engines/isaac_gym_engine.yaml",
             "--env_config", "data/envs/smp_x1_env.yaml",
