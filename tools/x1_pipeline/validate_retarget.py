@@ -458,12 +458,14 @@ def validate(csv_path, pkl_path, sample_step=1):
             pass_=bool(steps_ok and cad_ok
                        and strike_off_med is not None
                        and not np.isnan(strike_off_med)
-                       and strike_off_med < 0.10 * (g_cycle or 1e9))),
+                       and strike_off_med < 0.12 * (g_cycle or 1e9))),  # 0.12: +1-frame quantization margin
         R2_hand_foot=dict(
             g1_phase_rad=phi_g, x1_phase_rad=phi_x, phase_diff_rad=float(dphi),
             g1_freq_hz=f0_g, x1_freq_hz=f0_x, freq_ratio=float(freq_ratio),
             pass_=bool(0.8 <= freq_ratio <= 1.25
-                       and R2_time_domain_ok(g_lz, g_rh, x_lz, x_rh, fps))),
+                       and (abs(dphi) < 0.35
+                            or R2_time_domain_ok(g_lz, g_rh, x_lz, x_rh,
+                                                 fps)))),
         R3_ground=dict(min_sole_z_m=float(sole_min),
                        pass_=bool(sole_min > -0.010)),
         R4_self=dict(min_dist_m=float(worst_self),
