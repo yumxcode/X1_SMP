@@ -126,11 +126,10 @@ def apply_robustness_patches():
                         state["push"][e] = None
                     if (cur is None or cur[1] <= 0) and \
                             torch.rand(1).item() < PUSH_PROB:
-                        ang = torch.rand(1).item() * 2 * 3.14159265
-                        f = torch.tensor([PUSH_FORCE * float(torch.cos(
-                            torch.tensor(ang))),
-                                          PUSH_FORCE * float(torch.sin(
-                              torch.tensor(ang))), 0.0])
+                        ang = np.random.rand() * 2 * 3.14159265
+                        f = torch.tensor([PUSH_FORCE * float(np.cos(ang)),
+                                          PUSH_FORCE * float(np.sin(ang)),
+                                          0.0], device=agent._device)
                         env._engine.set_body_forces([e], 0, 0, f)
                         state["push"][e] = (f, PUSH_STEPS)
             state["step"] = state.get("step", 0) + 1
