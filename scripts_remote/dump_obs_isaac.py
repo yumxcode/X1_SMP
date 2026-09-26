@@ -18,6 +18,8 @@ subprocess.check_call([sys.executable, "-m", "pip", "install", "-q",
                        "fonttools", "kiwisolver", "pyparsing",
                        "python-dateutil", "six", "tensorboardX", "protobuf"])
 
+sys.path.insert(0, os.path.join(ROOT, "mimickit"))
+sys.path.insert(0, ROOT)
 import envs.env_builder as env_builder  # isaacgym before torch
 import numpy as np
 import torch
