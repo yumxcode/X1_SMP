@@ -132,8 +132,8 @@ def apply_robustness_patches():
 
         orig_reset = agent._reset_envs
 
-        def noisy_reset():
-            obs, info = orig_reset()
+        def noisy_reset(*args, **kwargs):
+            obs, info = orig_reset(*args, **kwargs)
             if agent._mode == AgentMode.TRAIN:
                 obs = obs + torch.randn_like(obs) * OBS_NOISE
             return obs, info
