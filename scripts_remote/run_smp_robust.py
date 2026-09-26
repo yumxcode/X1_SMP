@@ -94,18 +94,9 @@ def apply_robustness_patches():
         orig_step = agent._step_env
 
         def noisy_decide(obs, info):
-            if agent._mode == AgentMode.TRAIN:
-                obs = obs + torch.randn_like(obs) * OBS_NOISE
-            a, a_info = orig_decide(obs, info)
-            if agent._mode == AgentMode.TRAIN:
-                a = a + torch.randn_like(a) * ACT_NOISE
-                if state["prev_a"] is not None and LATENCY_STEPS > 0:
-                    held = state["prev_a"]
-                    a = torch.where(
-                        torch.rand(a.shape[0], 1, device=a.device) < 0.3,
-                        held, a)
-                state["prev_a"] = a.detach().clone()
-            return a, a_info
+            # obs noise lives in the obs stream (patched at _step_env /
+            # _reset_envs); decision and logged log_prob stay consistent.
+            return orig_decide(obs, info)
 
         def pushy_step(action):
             env = state["env"]
@@ -134,10 +125,22 @@ def apply_robustness_patches():
                         env._engine.set_body_forces([e], 0, 0, f)
                         state["push"][e] = (f, PUSH_STEPS)
             state["step"] = state.get("step", 0) + 1
-            return orig_step(action)
+            obs, r, done, info = orig_step(action)
+            if agent._mode == AgentMode.TRAIN:
+                obs = obs + torch.randn_like(obs) * OBS_NOISE
+            return obs, r, done, info
+
+        orig_reset = agent._reset_envs
+
+        def noisy_reset():
+            obs, info = orig_reset()
+            if agent._mode == AgentMode.TRAIN:
+                obs = obs + torch.randn_like(obs) * OBS_NOISE
+            return obs, info
 
         agent._decide_action = noisy_decide
         agent._step_env = pushy_step
+        agent._reset_envs = noisy_reset
         return agent
 
     env_builder.build_env = build_env
