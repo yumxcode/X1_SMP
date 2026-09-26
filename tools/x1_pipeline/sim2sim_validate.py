@@ -157,6 +157,11 @@ class Sim2Sim:
 
         self.key_body_ids = [m.body(n).id for n in KEY_BODIES]
         self.root_bid = m.body("base_link").id
+        # numeric-stability fix: explicit kd*qd at dt=1/120 diverges on
+        # small-inertia joints (armature 0.01-0.02, kd 5-45 -> kd*dt/m ~ 15).
+        # MuJoCo Euler integrates dof_damping implicitly, matching Isaac's
+        # implicit PD damping; keep only the explicit clipped kp term.
+        m.dof_damping[self.vadr] = self.kd
         self.torso_bid = m.body("lumbar_pitch_link").id
         # fall-contact geoms: everything except feet soles
         self.fall_gids = [g for g in range(m.ngeom)
@@ -169,36 +174,77 @@ class Sim2Sim:
         home[23:29] = [-0.48891, -0.06213, 0.33853, 0.63204, -0.27224, 0.0]
         self.home = home
 
+        # demo dataset (same list the Isaac AMP env samples reset frames
+        # from — motion-frame init, matching training protocol)
+        import pickle
+        self.motions = []
+        ds = REPO_ROOT / "data/datasets/dataset_x1_run.yaml"
+        import re as _re
+        for line in ds.read_text().splitlines():
+            m_ = _re.search(r'file:\s*"([^"]+)"', line)
+            if m_:
+                self.motions.append(pickle.load(
+                    open(REPO_ROOT / m_.group(1), "rb")))
+
     def reset(self, seed):
+        """Episode init MATCHING Isaac AMP training: sample a random frame
+        from the retargeted demo dataset and set state + finite-diff
+        velocities (standing start is OOD — the policy never trained on it;
+        verified via Isaac-side dump TASK_20260926_083)."""
         self.mj.mj_resetData(self.m, self.d)
         rng = np.random.RandomState(seed)
-        self.d.qpos[:3] = [0, 0, 0.615]
-        self.d.qpos[3] = 1.0
-        self.d.qpos[4:7] = 0
-        self.d.qpos[self.qadr] = self.home + rng.uniform(-0.03, 0.03, 29)
-        self.d.qvel[:] = 0
+        mo = self.motions[rng.randint(len(self.motions))]
+        F = mo["frames"]
+        i = rng.randint(1, len(F) - 2)
+        dt = 1.0 / mo["fps"]
+        f, f0, f1 = F[i], F[i - 1], F[i + 1]
+
+        self.d.qpos[:3] = f[0:3]
+        em = np.asarray(f[3:6])
+        ang = np.linalg.norm(em)
+        if ang < 1e-8:
+            self.d.qpos[3:7] = [1, 0, 0, 0]
+        else:
+            ax = em / ang
+            self.d.qpos[3:7] = [np.cos(ang / 2), *(ax * np.sin(ang / 2))]
+        self.d.qpos[self.qadr] = f[6:35]
+
+        # velocities from central differences
+        self.d.qvel[:3] = (np.asarray(f1[0:3]) - np.asarray(f0[0:3])) / (2 * dt)
+        R = np.zeros(9)
+        self.mj.mju_quat2Mat(R, self.d.qpos[3:7])
+        R = R.reshape(3, 3)
+        w_world = (np.asarray(f1[3:6]) - np.asarray(f0[3:6])) / (2 * dt)
+        self.d.qvel[3:6] = R.T @ w_world  # local frame (Isaac convention)
+        self.d.qvel[self.vadr] = (np.asarray(f1[6:35]) -
+                                  np.asarray(f0[6:35])) / (2 * dt)
         self.mj.mj_forward(self.m, self.d)
 
     def joint_quats(self):
-        """Per-joint local rotation quats (wxyz) from hinge values."""
+        """Per-joint local rotation quats in torch_util's XYZW layout
+        (axis_angle_to_quat convention used by the training-side kin
+        char model; verified against the Isaac obs dump)."""
         q = self.d.qpos[self.qadr]
         out = np.zeros((29, 4))
         for i in range(29):
             half = 0.5 * q[i]
             a = self.axes[i]
-            out[i, 0] = np.cos(half)
-            out[i, 1:] = a * np.sin(half)
+            out[i, :3] = a * np.sin(half)
+            out[i, 3] = np.cos(half)
         return out
 
     def obs(self):
         d = self.d
         root_pos = d.qpos[:3].copy()
-        root_quat = d.qpos[3:7].copy()  # wxyz
-        # MuJoCo free joint: linear vel in WORLD frame; angular vel in
-        # LOCAL body frame (well-known quirk) -> convert to world both
-        R = d.xmat[self.root_bid].reshape(3, 3)
+        # torch_util quats are XYZW; MuJoCo qpos stores WXYZ -> convert
+        w, x, y, z = d.qpos[3], d.qpos[4], d.qpos[5], d.qpos[6]
+        root_quat = np.array([x, y, z, w])
+        # Isaac Gym root_state[7:10] lin vel = WORLD frame;
+        # root_state[10:13] ang vel = LOCAL body frame (documented quirk).
+        # MuJoCo free joint: lin vel WORLD, ang vel LOCAL — same convention,
+        # pass both through unchanged.
         root_vel = d.qvel[:3].copy()
-        root_w = R @ d.qvel[3:6]
+        root_w = d.qvel[3:6].copy()
         jr = self.joint_quats()
         dv = d.qvel[self.vadr].copy()
         key = d.xpos[self.key_body_ids].copy()
@@ -215,8 +261,7 @@ class Sim2Sim:
             q_tar = np.clip(a, -self.a_bound, self.a_bound)
             for _ in range(steps_per_ctrl):
                 q = self.d.qpos[self.qadr]
-                qd = self.d.qvel[self.vadr]
-                tau = np.clip(self.kp * (q_tar - q) - self.kd * qd,
+                tau = np.clip(self.kp * (q_tar - q),
                               -self.eff, self.eff)
                 self.d.ctrl[:] = tau
                 self.mj.mj_step(self.m, self.d)
@@ -236,8 +281,7 @@ class Sim2Sim:
             log["pitch"].append(pitch)
             log["q"].append(self.d.qpos[self.qadr].copy())
             log["torque"].append(
-                np.abs(np.clip(self.kp * (q_tar - self.d.qpos[self.qadr])
-                               - self.kd * self.d.qvel[self.vadr],
+                np.abs(np.clip(self.kp * (q_tar - self.d.qpos[self.qadr]),
                                -self.eff, self.eff)))
             # fall contacts (checked per control step; window small)
             self.mj.mj_forward(self.m, self.d)
