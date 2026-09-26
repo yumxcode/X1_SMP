@@ -55,6 +55,8 @@ for t in range(N):
     nobs, r, done, info = agent._step_env(action)
     agent._curr_obs, agent._curr_info = agent._reset_done_envs(done)
 
-np.savez_compressed(os.path.join(ROOT, "output", "isaac_traj.npz"),
-                    **{k: np.stack(v) for k, v in traj.items()})
-print("[traj] dumped", N, "steps -> output/isaac_traj.npz", flush=True)
+os.makedirs(os.path.join(ROOT, "output"), exist_ok=True)
+torch.save({k: torch.tensor(np.stack(v)) for k, v in traj.items()},
+           os.path.join(ROOT, "output", "isaac_traj.pt"))
+print("[traj] dumped", N, "steps -> output/isaac_traj.pt", flush=True)
+import time; time.sleep(60)  # let the SDK upload before container dies
