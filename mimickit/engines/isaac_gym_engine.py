@@ -711,8 +711,14 @@ class IsaacGymEngine(engine.Engine):
         # 4096 humanoid envs exceed PhysX defaults -> PxgAABBManager
         # "increase foundLostPairsCapacity" invalid-parameter spam and
         # dropped contact pairs (robots sinking). Raise GPU capacities.
-        sim_params.physx.found_lost_pairs_capacity = 4 * 1024 * 1024
-        sim_params.physx.total_aggregate_pairs_capacity = 4 * 1024 * 1024
+        for _attr, _val in (("gpu_found_lost_pairs_capacity", 4194304),
+                            ("found_lost_pairs_capacity", 4194304),
+                            ("gpu_total_aggregate_pairs_capacity", 4194304),
+                            ("total_aggregate_pairs_capacity", 4194304),
+                            ("gpu_max_rigid_patch_count", 1048576),
+                            ("gpu_max_rigid_contact_count", 4194304)):
+            if hasattr(sim_params.physx, _attr):
+                setattr(sim_params.physx, _attr, _val)
         
         sim_params.flex.dynamic_friction = 1.0
         sim_params.flex.static_friction = 1.0
