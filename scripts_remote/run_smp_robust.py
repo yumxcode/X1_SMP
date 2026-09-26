@@ -121,8 +121,9 @@ def apply_robustness_patches():
                         env._engine.set_body_forces([e], 0, 0, f)
                         state["push"][e] = (f, cur[1] - 1)
                     elif cur is not None and cur[1] == 0:
-                        env._engine.set_body_forces([e], 0, 0,
-                                                     torch.zeros(3))
+                        env._engine.set_body_forces(
+                            [e], 0, 0,
+                            torch.zeros(3, device=agent._device))
                         state["push"][e] = None
                     if (cur is None or cur[1] <= 0) and \
                             torch.rand(1).item() < PUSH_PROB:
