@@ -328,7 +328,7 @@ def phase_of(a, b, fps):
     return float(np.angle(B[k] / A[k]))
 
 
-def analyze(log, episode_len):
+def analyze(log, episode_len, eff):
     fps = 30
     z = np.array(log["root_z"]); x = np.array(log["root_x"])
     l_z = np.array(log["lf_z"]); r_z = np.array(log["rf_z"])
@@ -362,9 +362,21 @@ def analyze(log, episode_len):
               pass_=bool(abs(torso_med) < 25 and -0.8 <= hip_pitch_med <= 0.8
                          and 0.2 <= knee_med <= 1.4
                          and abs(abs(dphi) - np.pi) < 0.8))
-    return dict(S1_no_fall=s1, S2_gait=s2, S3_morphology=s3,
+    # S4 actuation sanity (per-joint; the lesson: ankle saturation is
+    # invisible in whole-body averages). frac of control steps with
+    # |tau| >= 95% effort, and PD tracking gap p95 per joint group.
+    sat = tau >= 0.95 * eff[None, :]
+    sat_frac = sat.mean(axis=0)
+    leg_idx = list(range(17, 29))
+    sat_leg_max = float(sat_frac[leg_idx].max())
+    tau_ratio = tau[:, leg_idx] / eff[None, leg_idx]
+    tau_p99 = float(np.quantile(tau_ratio, 0.99))
+    s4 = dict(tau_sat_frac_leg_max=sat_leg_max, tau_ratio_p99_leg=tau_p99,
+              pass_=bool(sat_leg_max < 0.35 and tau_p99 < 0.95))
+    return dict(S1_no_fall=s1, S2_gait=s2, S3_morphology=s3, S4_actuation=s4,
                 torque_p99=float(np.quantile(tau, 0.99)),
-                PASS=bool(s1["pass_"] and s2["pass_"] and s3["pass_"]))
+                PASS=bool(s1["pass_"] and s2["pass_"] and s3["pass_"]
+                          and s4["pass_"]))
 
 
 def main():
@@ -385,7 +397,7 @@ def main():
                    rh_x=[], lf_x=[], rf_x=[], pitch=[], q=[], torque=[],
                    bad_contact=[])
         sim.run_episode(args.len, log)
-        r = analyze(log, args.len)
+        r = analyze(log, args.len, sim.eff)
         r["episode"] = ep
         results.append(r)
         print(f"[sim2sim] ep{ep}: {'PASS' if r['PASS'] else 'FAIL'} "
