@@ -21,10 +21,12 @@ subprocess.check_call([sys.executable, "-m", "pip", "install", "-q",
 sys.path.insert(0, os.path.join(ROOT, "mimickit"))
 sys.path.insert(0, ROOT)
 
-import torch  # noqa: E402
-import numpy as np  # noqa: E402
+# isaacgym MUST be imported before torch
 import envs.env_builder as env_builder  # noqa: E402
 import learning.agent_builder as agent_builder  # noqa: E402
+
+import torch  # noqa: E402
+import numpy as np  # noqa: E402
 from learning.base_agent import AgentMode  # noqa: E402
 
 NUM_ENVS = 8
