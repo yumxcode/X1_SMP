@@ -159,12 +159,24 @@ sys.argv = ["run.py", "--mode", "train", "--num_envs", "4096",
             "--max_samples", os.environ.get("X1_MAX_SAMPLES", "500000000")]
 _mf = os.environ.get("X1_MODEL_FILE", "")
 if _mf:
-    # platform-mounted resume checkpoint (glob: mount path varies)
+    # platform-mounted resume checkpoint (mount layout varies — search
+    # the repo dir and the whole workspace, newest match wins)
     import glob as _glob
-    cands = _glob.glob(_mf)
+    pats = [_mf] + [os.path.join(ROOT, _f)
+                    for _f in (_mf, _mf.lstrip("./"))]
+    pats += [os.path.join("/workspace", "**", os.path.basename(_mf)),
+             os.path.join(ROOT, "**", os.path.basename(_mf))]
+    cands = []
+    for p in pats:
+        cands += _glob.glob(p, recursive=True)
+    cands = sorted(set(cands), key=os.path.getmtime)
     if not cands:
-        raise RuntimeError(f"X1_MODEL_FILE glob matched nothing: {_mf}")
-    cands.sort(key=os.path.getmtime)
+        # last resort: any file matching the basename anywhere
+        cands = sorted(_glob.glob(os.path.join(
+            "/workspace", "**", os.path.basename(_mf)), recursive=True),
+            key=os.path.getmtime)
+    if not cands:
+        raise RuntimeError(f"X1_MODEL_FILE matched nothing; tried {pats}")
     sys.argv += ["--model_file", cands[-1]]
     print(f"[resume] loading agent weights: {cands[-1]}", flush=True)
 runpy.run_path(os.path.join(ROOT, "mimickit", "run.py"), run_name="__main__")
