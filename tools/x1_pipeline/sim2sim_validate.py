@@ -162,7 +162,10 @@ class Sim2Sim:
         # MuJoCo Euler integrates dof_damping implicitly, matching Isaac's
         # implicit PD damping; keep only the explicit clipped kp term.
         m.dof_damping[self.vadr] = self.kd
-        self.torso_bid = m.body("lumbar_pitch_link").id
+        # torso orientation MUST be read on base_link: lumbar_pitch_link's frame
+        # carries a 90-deg URDF export rotation (quat 0.707 0 0.707 0) which
+        # corrupts any pitch/roll computed from its xmat
+        self.torso_bid = m.body("base_link").id
         # fall-contact geoms: everything except feet soles
         self.fall_gids = [g for g in range(m.ngeom)
                           if not (m.geom(g).name or "").endswith("_sole")
@@ -174,12 +177,19 @@ class Sim2Sim:
         home[23:29] = [-0.48891, -0.06213, 0.33853, 0.63204, -0.27224, 0.0]
         self.home = home
 
-        # demo dataset (same list the Isaac AMP env samples reset frames
-        # from — motion-frame init, matching training protocol)
+        # demo dataset: the SAME file the SMP env yaml points at (training
+        # samples reset frames from it — resetting from any other dataset,
+        # e.g. the old v1 pkls, puts the policy OOD and it collapses at
+        # t=0 with pd_gap > 3 rad: measured root cause of instant falls)
         import pickle
         self.motions = []
-        ds = REPO_ROOT / "data/datasets/dataset_x1_run.yaml"
+        env_yaml = REPO_ROOT / "data/envs/smp_x1_env.yaml"
         import re as _re
+        ds_line = [l for l in env_yaml.read_text().splitlines()
+                   if l.strip().startswith("motion_file:")][0]
+        ds = REPO_ROOT / _re.search(
+            r'"([^"]+)"', ds_line).group(1)
+        print(f"[sim2sim] reset dataset: {ds.name}")
         for line in ds.read_text().splitlines():
             m_ = _re.search(r'file:\s*"([^"]+)"', line)
             if m_:
@@ -270,15 +280,22 @@ class Sim2Sim:
             rf = self.d.site("x_rfoot").xpos.copy()
             lh = self.d.site("x_lhand").xpos.copy()
             rh = self.d.site("x_rhand").xpos.copy()
+            # yaw-invariant pitch/roll from the body z-axis
+            # (arctan2(R[2,0], R[0,0]) wraps +-180 deg when yaw~180 —
+            # running direction is arbitrary in the retargeted clips)
             R = self.d.xmat[self.torso_bid].reshape(3, 3)
-            pitch = np.arctan2(R[2, 0], R[0, 0])
+            up_body = R[:, 2]
+            pitch = np.arctan2(-up_body[0], up_body[2])
+            roll = np.arctan2(up_body[1], up_body[2])
             log["t"].append(it * ctrl_period)
             log["root_z"].append(self.d.qpos[2])
             log["root_x"].append(self.d.qpos[0])
+            log["root_y"].append(self.d.qpos[1])
             log["lf_z"].append(lf[2]); log["rf_z"].append(rf[2])
             log["lh_x"].append(lh[0]); log["rh_x"].append(rh[0])
             log["lf_x"].append(lf[0]); log["rf_x"].append(rf[0])
             log["pitch"].append(pitch)
+            log["roll"].append(roll)
             log["q"].append(self.d.qpos[self.qadr].copy())
             log["torque"].append(
                 np.abs(np.clip(self.kp * (q_tar - self.d.qpos[self.qadr]),
@@ -330,7 +347,9 @@ def phase_of(a, b, fps):
 
 def analyze(log, episode_len, eff):
     fps = 30
-    z = np.array(log["root_z"]); x = np.array(log["root_x"])
+    z = np.array(log["root_z"])
+    xy = np.stack([np.array(log["root_x"]),
+                   np.array(log.get("root_y", np.zeros_like(z)))], axis=1)
     l_z = np.array(log["lf_z"]); r_z = np.array(log["rf_z"])
     pitch = np.array(log["pitch"])
     Q = np.array(log["q"])  # (T, 29) X1 dof order: lumbar3 Larm Rarm Lleg Rleg
@@ -341,7 +360,10 @@ def analyze(log, episode_len, eff):
     ls = detect_strikes(l_z); rs = detect_strikes(r_z)
     n_strides = min(len(ls), len(rs))
     stride_p = (np.median(np.diff(ls)) / fps if len(ls) >= 3 else np.inf)
-    speed = float(np.mean(np.gradient(x, 1 / fps)))
+    # horizontal SPEED MAGNITUDE (travel direction is arbitrary in the
+    # retargeted clips — mean dx alone underestimates or sign-flips)
+    v_xy = np.gradient(xy, 1 / fps, axis=0)
+    speed = float(np.mean(np.linalg.norm(v_xy, axis=1)))
     # swing clearance: p90 of each foot's z minus its stance base
     clr_l = float(np.quantile(l_z, 0.9) - np.quantile(l_z, 0.05))
     clr_r = float(np.quantile(r_z, 0.9) - np.quantile(r_z, 0.05))
@@ -393,9 +415,9 @@ def main():
     results = []
     for ep in range(args.episodes):
         sim.reset(args.seed + ep)
-        log = dict(t=[], root_z=[], root_x=[], lf_z=[], rf_z=[], lh_x=[],
-                   rh_x=[], lf_x=[], rf_x=[], pitch=[], q=[], torque=[],
-                   bad_contact=[])
+        log = dict(t=[], root_z=[], root_x=[], root_y=[], lf_z=[], rf_z=[],
+                   lh_x=[], rh_x=[], lf_x=[], rf_x=[], pitch=[], roll=[],
+                   q=[], torque=[], bad_contact=[])
         sim.run_episode(args.len, log)
         r = analyze(log, args.len, sim.eff)
         r["episode"] = ep

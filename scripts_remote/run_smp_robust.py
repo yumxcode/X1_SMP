@@ -157,6 +157,16 @@ sys.argv = ["run.py", "--mode", "train", "--num_envs", "4096",
             "--visualize", "false", "--out_dir", "output/",
             "--save_int_models", "true",
             "--max_samples", os.environ.get("X1_MAX_SAMPLES", "500000000")]
+_mf = os.environ.get("X1_MODEL_FILE", "")
+if _mf:
+    # platform-mounted resume checkpoint (glob: mount path varies)
+    import glob as _glob
+    cands = _glob.glob(_mf)
+    if not cands:
+        raise RuntimeError(f"X1_MODEL_FILE glob matched nothing: {_mf}")
+    cands.sort(key=os.path.getmtime)
+    sys.argv += ["--model_file", cands[-1]]
+    print(f"[resume] loading agent weights: {cands[-1]}", flush=True)
 runpy.run_path(os.path.join(ROOT, "mimickit", "run.py"), run_name="__main__")
 
 try:
