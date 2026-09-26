@@ -708,6 +708,11 @@ class IsaacGymEngine(engine.Engine):
         sim_params.physx.default_buffer_size_multiplier = 10.0
         sim_params.physx.num_subscenes = 0
         sim_params.physx.max_gpu_contact_pairs = 8 * 1024 * 1024
+        # 4096 humanoid envs exceed PhysX defaults -> PxgAABBManager
+        # "increase foundLostPairsCapacity" invalid-parameter spam and
+        # dropped contact pairs (robots sinking). Raise GPU capacities.
+        sim_params.physx.found_lost_pairs_capacity = 4 * 1024 * 1024
+        sim_params.physx.total_aggregate_pairs_capacity = 4 * 1024 * 1024
         
         sim_params.flex.dynamic_friction = 1.0
         sim_params.flex.static_friction = 1.0
