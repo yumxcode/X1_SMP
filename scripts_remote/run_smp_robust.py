@@ -71,9 +71,10 @@ def start_checkpoint_exporter(prefix):
 
 def apply_robustness_patches():
     """Monkey-wrap agent decision + env step for noise/latency/pushes."""
-    import torch
+    # isaacgym (pulled in by env_builder) MUST be imported before torch
     import envs.env_builder as env_builder
     import learning.agent_builder as agent_builder
+    import torch
     from learning.base_agent import AgentMode
 
     orig_build_env = env_builder.build_env
