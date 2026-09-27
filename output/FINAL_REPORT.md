@@ -9,7 +9,7 @@
 | 交付项 | 裁决 | 依据 |
 |---|---|---|
 | ① G1→X1 重定向 + 严格标准 | ✅ **PASS** | 11/16 片段全门控通过（J1-J3 关节域 + R1-R6 几何/时序域），验证器自证成立，3 支 G1/X1 对比 MP4 |
-| ② X1 SMP 训练 | ✅ **PASS（Isaac 侧）** | prior v2 loss 0.279→0.029@200k；policy v2 续训至等效 ~it4493；**Isaac 侧 8/8 env × 10s 稳定奔跑**（3 episodes，|vx| 中位 4.5-5.3 m/s 路径度量，root_z~0.51m） |
+| ② X1 SMP 训练 | ✅ **PASS（Isaac 侧）** | prior v2 loss 0.279→0.029@200k；policy v2 续训至等效 ~it4493；**final 权重 Isaac 8/8 env × 10s 稳定**（TASK_20260927_015：\|vx\| 中位 1.55-1.84 m/s，root_z~0.55；中期 it1900 亦 8/8，TASK_005） |
 | ③ MuJoCo sim2sim 严格验证 | ❌ **FAIL（如实裁决）** | 最终 policy 0/4×10s，0.5-1.5s 内摔倒。根因已定量定位为 **Isaac/MuJoCo 引擎级动力学分歧**（证据链见 §四），非重定向数据、非验证 harness、非训练不足 |
 
 ---
@@ -81,30 +81,66 @@
 
 ### 4.2 裁决
 
-**最终 policy（smp_v2_policy_final.pt）：0/4×10s PASS**（0.5-1.5s 内前扑摔倒；`output/sim2sim_smp_v2_final.json`；视频 `output/renders/sim2sim_v2_final_seed1.mp4`、`sim2sim_v2_fall_seed0.mp4`）
+**最终 policy（smp_v2_policy_final.pt）：0/4×10s PASS**（0.5-1.5s 内前扑摔倒；`output/sim2sim_smp_v2_final.json`；视频 `output/renders/sim2sim_v2_final_seed1.mp4`、`sim2sim_v2_fall_seed0.mp4`）。Isaac 语义执行器对齐版同样 0/4（`output/sim2sim_aligned_actuator.json`）
 
-### 4.3 根因证据链（全部定量）
+### 4.3 根因证据链（v2 同源，全部定量；来源工件与生成时间标注）
 
-**已排除**：
-1. reset 分布外——验证器曾从 v1 旧数据集 reset（t=0 pd_gap 3.07rad 秒倒），修复为 env yaml 同源 v2 数据集后 pd_gap→0.5rad，仍倒
-2. 接触参数——solref/condim/摩擦 4 种配置对 fall time **零影响**（0.7/0.9/1.0s 不变）
-3. obs 角速度通道敏感性——angvel 通道衰减 ×0.5/×0.0，fall time **零变化**
-4. 单关节资产异常（Isaac 右踝 roll 钉 +0.64 限位）——MuJoCo 锁 0/锁 0.64/轴翻转均无效
-5. 验证 harness 自身——躯干姿态曾读在带 90° URDF 旋转的 lumbar_pitch_link 上（已改 base_link）、pitch 曾用 yaw 相关公式（已改 yaw 无关）、速度曾用有符号 dx（已改水平模长）
+> 按审核要求重写：本节所有"已证实"证据均锚定 **v2 同代际工件**
+> `output/remote_ckpt/isaac_traj_v2.pt`（TASK_20260927_016，2026-09-27
+> 09:41 生成：与被测策略 smp_v2_policy_final 同任务同环境 dump，120
+> 控制步 × {obs, root/dof 状态, action, q_tar, torque, kp/kd/tlim}），
+> 替换初版报告误用的 v9 时代 isaac_traj.pt（2026-09-26 14:02，跨代际）。
 
-**已证实**：
-1. **Isaac 侧同一策略 8/8×10s 稳定奔跑**（对照实验 TASK_20260927_005）
-2. **obs 计算逐位一致**：同初态 t=0 全 231 维 obs 差 0.000
-3. **开环动作重放 1 个控制步内角速度发散 ~1 rad/s，1.5s 内 root_z 差 0.4m**——同动作序列下两引擎接触冲量级动力学分歧（MuJoCo timestep 1/120 与 Isaac 相同）
-4. **正例对照**：重定向参考轨迹直接作 q_tar 开环回放，MuJoCo 1.1s 摔倒（`tools/x1_pipeline/positive_control_replay.py`）——运动学重定向数据本身无动力学自稳能力，策略平衡完全依赖训练引擎的闭环动力学
+**已排除（本地实验，逐项落盘）**：
+1. reset 分布外——验证器曾从 v1 旧数据 reset（t=0 pd_gap 3.07rad），改从 env yaml 同源 v2 数据后 pd_gap→0.5rad，仍倒
+2. 接触参数——solref/condim/摩擦 4 配置对 fall time 零影响（0.7/0.9/1.0s）
+3. obs 角速度通道——angvel 衰减 ×0.5/×0.0，fall time 零变化
+4. 执行器模型语义（`output/sim2sim_aligned_actuator.json`）——Isaac 语义
+   position-servo 改造（隐式 PD + 非对称动作界 mid±1.4×half + effort
+   forcerange，逐 actuator 断言关节映射），final 与 it1900 均 **0/4**
+   （0.5-0.8s 倒）；同时证实 harness 的 kp/kd 与 Isaac dump 逐关节
+   allclose=True（x1.xml jnt_stiffness 即 Isaac dof stiffness）
+5. 被动项差异（`replay_passive_zero.py`）——armature=0 / frictionloss=0
+   / 双清零，第一步 dof_vel 分歧 5.87→6.57/5.81/7.23，无改善
+6. 动作 clip 语义（`replay_qtar.py`）——直接回放 dump 的 q_tar：第一步
+   dof_vel diff 3.429，与回放 action 完全相同
+7. 单关节资产异常——MuJoCo 锁右踝 roll 于 0/+0.64/轴翻转均无效
+8. harness 度量 bug（已修 5 处后复测）：reset 数据集、base_link 姿态
+   读点、yaw 无关 pitch、水平速度模长、S4 分关节饱和
 
-**结论**：sim2sim 失败不是"数据没过门控"或"训练不够"，而是 **Isaac Gym 与 MuJoCo 的接触求解/驱动实现差异**（该 X1 29DOF 资产在 Isaac 侧存在右踝 roll 钉限位的关节伪影，策略的平衡解依赖该特定动力学）。
+**已证实（v2 同源工件）**：
+1. **Isaac 侧同一 final 权重 8/8×10s 稳定**（TASK_20260927_015，本
+   轮补跑：|vx| 中位 1.55-1.84 m/s，root_z ~0.55，3ep×8env）
+2. **obs t=0 逐位一致**：231 维差 6.4e-5（dump_v2_diff.py）
+3. **第一个控制步（33ms）内 dof_vel 即发散 3.4 rad/s**，随后 root_z
+   逐周期累积 -0.45m（t=88 最大），开环重放 0.43s 摔倒——分通道
+   定位：dof_vel 先爆（t=1: 3.43），root angvel 次之（t=2: 1.28），
+   位置通道最后（key bodies 0.007）→ 分歧起源于**关节级动力学数值
+   差异**（同 kp/kd/tlim/q_tar 下），经 PD 高增益混沌放大
+4. 正例对照重设（`positive_control_v2.json`）：(A) env home 姿态站立
+   保持——初始 ncon=0（该姿态下脚底距地 2mm），落地后 1.9s 缓塌；
+   定性为 home 姿态踝力矩边际平衡（踝 τlim 80 vs kp 200，质心微移即
+   正反馈），**两引擎同参数皆然，无引擎判别力**（Isaac 侧从未以
+   home 姿态重置——训练用 rand_reset 运动帧）；(B) 最慢片段
+   （ts=2.78）准静态起点开环回放 0.9s 倒——跑步参考无开环自稳
+   能力，与 (A) 一致不具引擎判别力
 
-### 4.4 建议下一步（超出本任务范围，供参考）
+**结论（修正版）**：sim2sim FAIL 的根因是 **Isaac PhysX 与 MuJoCo 在
+同参数关节动力学上的数值级分歧**（一个控制步内关节速度差 3.4
+rad/s，非资产缺陷、非 harness bug、非 PD/动作语义、非接触参数），
+而当前策略（obs 噪声 0.01 + 25N 推扰的鲁棒化训练）的稳定域不足以
+吸收该量级差异。Isaac 侧"右踝 roll 钉 +0.64"为 v1 时代 dump 中策略
+行为，静态资产（URDF/MJCF 限位对称 ±0.64）无对应缺陷，予以撤回。
 
-1. **修 Isaac 资产关节伪影**：排查 X1 x1.xml 在 Isaac 解析下的右踝 roll（限位 +0.64 钉死）后重训——最可能一步解决
-2. 或 **MuJoCo 域适应训练**：在 MuJoCo 里 finetune（domain randomization 覆盖接触参数）
-3. 重定向数据加动力学可行性过滤（如 ZMP/LIPM 校验）再入训练
+### 4.4 建议下一步
+
+1. **MuJoCo 域随机化微调**（推荐）：远端容器补装 mujoco 后，在
+   MuJoCo 中以 Isaac 权重热启动、随机化 solref/摩擦/增益 ±20% 微调
+   （需新增训练管线，本轮未实施）
+2. 加大鲁棒化强度重训（obs 噪声 0.03-0.05 + 增益/质量随机化），
+   扩大策略稳定域覆盖引擎数值差
+3. 关节动力学对齐精查（PhysX 显式 vs MuJoCo Euler 的积分细节、
+   solver 迭代参数），目标把第一步 dof_vel 分歧压到 <0.5 rad/s
 
 ---
 
@@ -119,6 +155,10 @@
 | sim2sim 验证器（S1-S4） | `tools/x1_pipeline/sim2sim_validate.py` |
 | sim2sim 裁决 JSON | `output/sim2sim_smp_v2_final.json`、`sim2sim_smp_v2_it1900.json` |
 | 摔倒证据视频 | `output/renders/sim2sim_v2_{fall_seed0,final_seed1}.mp4` |
+| v2 同源 Isaac dump（证据主锚点） | `output/remote_ckpt/isaac_traj_v2.pt`（TASK_20260927_016, 09-27 09:41） |
+| 执行器对齐实验 | `output/sim2sim_aligned_actuator.json` |
+| 正例对照 v2 | `output/positive_control_v2.json` |
+| 回放 diff 工具 | `tools/x1_pipeline/{dump_v2_diff,dump_v2_channels,replay_passive_zero,replay_qtar,aligned_actuator_test,positive_control_v2}.py` |
 | 权重 | `output/remote_ckpt/{prior_v2_final,smp_v2_policy_it1900,smp_v2_policy_final,smp_v9_robust_it3814}.pt` |
 | 诊断工具 | `tools/x1_pipeline/{diag_first_sec,positive_control_replay,render_sim2sim}.py` |
 | 关键 commits | 47ebb19(数据) 9caf237(prior) ffe3be4(验证器修复) bafcc59(resume 搜索) |

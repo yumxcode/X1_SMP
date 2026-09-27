@@ -1,0 +1,7 @@
+{
+  "standing_hold_fall_s": 1.8666666666666691,
+  "standing_final_z": 0.27042657045814306,
+  "slow_clip_fall_s": 0.8999999999999999,
+  "slow_clip_final_z": 0.2889912902685739,
+  "slow_clip": "/Users/yumx/code/MimicKit/data/motions/x1_v2/x1_run2_subject4_seg0.pkl"
+}
