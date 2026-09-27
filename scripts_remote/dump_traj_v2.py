@@ -28,9 +28,12 @@ import numpy as np  # noqa: E402
 
 
 def to_np(x):
-    """numpy/tensor -> numpy, robust to either."""
-    return x.detach() if hasattr(x, "detach") \
-        else (x if hasattr(x, "cpu") else np.asarray(x))
+    """anything (cuda/cpu tensor, numpy, gymtorch views) -> numpy."""
+    import torch
+    try:
+        return torch.as_tensor(x).detach().cpu().numpy()
+    except Exception:
+        return np.asarray(x)
 import torch  # noqa: E402
 import learning.agent_builder as agent_builder  # noqa: E402
 from learning.base_agent import AgentMode  # noqa: E402
