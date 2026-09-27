@@ -42,13 +42,8 @@ body_names = gym.get_actor_rigid_body_names(env_ptr, char_id)
 rows = []
 print("[audit] rigid bodies:", flush=True)
 for nm, p in zip(body_names, rb_props):
-    inertia = p.inertia  # Mat33 of Vec3 rows
-    idiag = (inertia.row0.x + inertia.row1.y + inertia.row2.z) / 3.0  # fallback
-    try:
-        idiag = (float(inertia.row0.x), float(inertia.row1.y),
-                 float(inertia.row2.z))
-    except Exception:
-        idiag = (-1.0, -1.0, -1.0)
+    inertia = p.inertia  # Mat33: .x/.y/.z are Vec3 ROWS
+    idiag = (float(inertia.x.x), float(inertia.y.y), float(inertia.z.z))
     rows.append((nm, float(p.mass), idiag))
     print(f"  {nm:32s} mass {p.mass:8.4f} inertia_diag "
           f"({idiag[0]:7.4f},{idiag[1]:7.4f},{idiag[2]:7.4f})",
