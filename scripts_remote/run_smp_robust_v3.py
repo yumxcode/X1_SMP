@@ -20,6 +20,23 @@ import shutil
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 os.chdir(ROOT)
+
+# ---- early verification channel: WHICH assets/code is this run using?
+import hashlib as _hl
+def _md5(p):
+    try:
+        return _hl.md5(open(p, "rb").read()).hexdigest()[:12]
+    except Exception as e:
+        return f"ERR {e}"
+import subprocess as _sp
+try:
+    _commit = _sp.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT,
+                               stderr=_sp.DEVNULL).decode().strip()[:8]
+except Exception:
+    _commit = "no-git"
+print(f"[verify] commit {_commit} | x1.xml md5 {_md5('data/assets/x1/x1.xml')}"
+      f" | x1_sim.xml md5 {_md5('data/assets/x1/x1_sim.xml')}"
+      f" | env {os.environ.get('X1_EXPORT_PREFIX', '')}", flush=True)
 # mimickit modules must be importable BEFORE the robustness patches below
 sys.path.insert(0, os.path.join(ROOT, "mimickit"))
 sys.path.insert(0, ROOT)
