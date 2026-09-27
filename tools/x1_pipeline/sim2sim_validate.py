@@ -162,6 +162,10 @@ class Sim2Sim:
         # MuJoCo Euler integrates dof_damping implicitly, matching Isaac's
         # implicit PD damping; keep only the explicit clipped kp term.
         m.dof_damping[self.vadr] = self.kd
+        # model-parity audit (TASK_20260928_013): Isaac's MJCF parser IGNORES
+        # frictionloss (all dofs read 0.0) while x1_sim.xml inherited 0.2-4.0
+        # N.m from the source mjcf. Zero it to match the training dynamics.
+        m.dof_frictionloss[self.vadr] = 0.0
         # torso orientation MUST be read on base_link: lumbar_pitch_link's frame
         # carries a 90-deg URDF export rotation (quat 0.707 0 0.707 0) which
         # corrupts any pitch/roll computed from its xmat

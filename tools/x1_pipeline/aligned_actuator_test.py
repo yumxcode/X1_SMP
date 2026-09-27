@@ -63,7 +63,11 @@ def retrofit(sim):
         m.actuator_forcerange[act_id] = [-sim.eff[k], sim.eff[k]]
         m.actuator_forcelimited[act_id] = 1
         m.actuator_gear[act_id] = 1.0
-    # dof_damping already = kd (kept implicit); passive stiffness is 0
+    # dof_damping: ZERO it — the servo's biasprm already provides -kd*qd and
+    # MuJoCo's implicit actuator integration covers it. Keeping dof_damping
+    # (as the harness sets it) would DOUBLE the damping (fixed-asset audit).
+    sim.m.dof_damping[sim.vadr] = 0.0
+    sim.m.dof_frictionloss[sim.vadr] = 0.0  # Isaac reads none (audit T013)
     sim.a_bound = np.maximum(np.abs(a_lo), np.abs(a_hi))  # clip only
     sim.pos_mode = True
     return sim
