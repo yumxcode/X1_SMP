@@ -57,8 +57,8 @@ for n, v, k, dd in zip(names, vel, stiff, damp):
 env.reset()
 rp = to_np(e.get_root_pos(char_id)[0]).copy()
 rp[2] += 1.0
-e.set_root_pos(0, char_id, torch.tensor(rp, device=e._root_pos.device,
-                                        dtype=torch.float32))
+e.set_root_pos(None, char_id, torch.tensor(rp, device=e._root_pos.device,
+                                        dtype=torch.float32))  # env_id None (single env)
 import math
 q0 = to_np(e.get_dof_pos(char_id)[0]).copy()
 out = dict(q=[], qd=[], q_tar=[])
