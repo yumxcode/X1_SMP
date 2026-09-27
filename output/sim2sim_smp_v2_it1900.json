@@ -1,0 +1,128 @@
+{
+  "checkpoint": "output/remote_ckpt/smp_v2_policy_it1900.pt",
+  "episodes": [
+    {
+      "S1_no_fall": {
+        "up_frac": 0.29333333333333333,
+        "bad_contact_frac": 0.0,
+        "pass_": false
+      },
+      "S2_gait": {
+        "n_strides": 1,
+        "stride_period_s": null,
+        "mean_speed_mps": -0.1817550618714751,
+        "swing_clear_l": 0.5485343892889277,
+        "swing_clear_r": 0.10657582446704608,
+        "pass_": false
+      },
+      "S3_morphology": {
+        "torso_pitch_deg": -60.59680211030153,
+        "hip_pitch_med": 0.630998294881399,
+        "knee_med": 1.370486339840406,
+        "arm_leg_phase_rad": 0.27363166308636394,
+        "pass_": false
+      },
+      "S4_actuation": {
+        "tau_sat_frac_leg_max": 0.07333333333333333,
+        "tau_ratio_p99_leg": 0.9509857263046768,
+        "pass_": false
+      },
+      "torque_p99": 115.59165304337937,
+      "PASS": false,
+      "episode": 0
+    },
+    {
+      "S1_no_fall": {
+        "up_frac": 0.1,
+        "bad_contact_frac": 0.0,
+        "pass_": false
+      },
+      "S2_gait": {
+        "n_strides": 1,
+        "stride_period_s": null,
+        "mean_speed_mps": 0.01399031224574721,
+        "swing_clear_l": 0.01850732605352349,
+        "swing_clear_r": 0.21204979668053955,
+        "pass_": false
+      },
+      "S3_morphology": {
+        "torso_pitch_deg": 96.1145187425817,
+        "hip_pitch_med": 0.5960582889464604,
+        "knee_med": 1.3243832503545288,
+        "arm_leg_phase_rad": -2.6422720539750606,
+        "pass_": false
+      },
+      "S4_actuation": {
+        "tau_sat_frac_leg_max": 0.0,
+        "tau_ratio_p99_leg": 0.5529551174658021,
+        "pass_": true
+      },
+      "torque_p99": 72.52159703811938,
+      "PASS": false,
+      "episode": 1
+    },
+    {
+      "S1_no_fall": {
+        "up_frac": 0.14666666666666667,
+        "bad_contact_frac": 0.0,
+        "pass_": false
+      },
+      "S2_gait": {
+        "n_strides": 2,
+        "stride_period_s": null,
+        "mean_speed_mps": 0.10935154278153045,
+        "swing_clear_l": 0.42749693762273383,
+        "swing_clear_r": 0.07397428060100078,
+        "pass_": false
+      },
+      "S3_morphology": {
+        "torso_pitch_deg": -118.01620528496458,
+        "hip_pitch_med": 0.8280135158338768,
+        "knee_med": 1.3071202738862095,
+        "arm_leg_phase_rad": -0.06444137450817478,
+        "pass_": false
+      },
+      "S4_actuation": {
+        "tau_sat_frac_leg_max": 0.02,
+        "tau_ratio_p99_leg": 0.7240420623662466,
+        "pass_": true
+      },
+      "torque_p99": 77.992915784135,
+      "PASS": false,
+      "episode": 2
+    },
+    {
+      "S1_no_fall": {
+        "up_frac": 0.08666666666666667,
+        "bad_contact_frac": 0.0,
+        "pass_": false
+      },
+      "S2_gait": {
+        "n_strides": 1,
+        "stride_period_s": null,
+        "mean_speed_mps": -0.01794031757157639,
+        "swing_clear_l": 0.36039702848813454,
+        "swing_clear_r": 0.06597859593839,
+        "pass_": false
+      },
+      "S3_morphology": {
+        "torso_pitch_deg": -65.27180410136017,
+        "hip_pitch_med": 0.6609874445314439,
+        "knee_med": 1.3692410163486266,
+        "arm_leg_phase_rad": 0.060732774588752675,
+        "pass_": false
+      },
+      "S4_actuation": {
+        "tau_sat_frac_leg_max": 0.04,
+        "tau_ratio_p99_leg": 0.8557681851205748,
+        "pass_": true
+      },
+      "torque_p99": 78.41472784695729,
+      "PASS": false,
+      "episode": 3
+    }
+  ],
+  "pass_episodes": 0,
+  "total": 4,
+  "PASS": false
+}
