@@ -43,10 +43,9 @@ e = env._engine
 agent._curr_obs, agent._curr_info = agent._reset_envs()
 
 # engine-side gains/limits actually used
-kp = e.get_obj_kp(0, char_id).cpu().numpy() if hasattr(e, "get_obj_kp") \
-    else np.zeros(29)
-kd = e.get_obj_kd(0, char_id).cpu().numpy() if hasattr(e, "get_obj_kd") \
-    else np.zeros(29)
+kp, kd = e.get_obj_pd_gains(0, char_id)
+kp = kp.cpu().numpy()
+kd = kd.cpu().numpy()
 tlim = e.get_obj_torque_limits(0, char_id).cpu().numpy()
 print(f"[dump] kp[:6] {np.round(kp[:6],1)} kd[:6] {np.round(kd[:6],1)} "
       f"tlim[:6] {np.round(tlim[:6],1)}", flush=True)
