@@ -180,10 +180,13 @@ class Sim2Sim:
         # demo dataset: the SAME file the SMP env yaml points at (training
         # samples reset frames from it — resetting from any other dataset,
         # e.g. the old v1 pkls, puts the policy OOD and it collapses at
-        # t=0 with pd_gap > 3 rad: measured root cause of instant falls)
+        # t=0 with pd_gap > 3 rad: measured root cause of instant falls).
+        # v3: --env selects the env yaml (default v2 kept for old-policy
+        # control experiments).
         import pickle
         self.motions = []
-        env_yaml = REPO_ROOT / "data/envs/smp_x1_env.yaml"
+        env_yaml = REPO_ROOT / getattr(type(self), "ENV_YAML_REL",
+                                       "data/envs/smp_x1_env.yaml")
         import re as _re
         ds_line = [l for l in env_yaml.read_text().splitlines()
                    if l.strip().startswith("motion_file:")][0]
@@ -408,9 +411,12 @@ def main():
     ap.add_argument("--len", type=float, default=10.0)
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--json", default=None)
+    ap.add_argument("--env", default="data/envs/smp_x1_env.yaml",
+                    help="env yaml whose motion_file defines the reset dataset")
     args = ap.parse_args()
 
     pol = Policy(args.ckpt)
+    Sim2Sim.ENV_YAML_REL = args.env  # class attr: read inside __init__
     sim = Sim2Sim(pol)
     results = []
     for ep in range(args.episodes):
