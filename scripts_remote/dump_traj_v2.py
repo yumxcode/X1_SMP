@@ -50,9 +50,9 @@ agent._curr_obs, agent._curr_info = agent._reset_envs()
 
 # engine-side gains/limits actually used
 kp, kd = e.get_obj_pd_gains(0, char_id)
-kp = np.asarray(kp)
-kd = np.asarray(kd)
-tlim = to_np(e.get_obj_torque_limits(0, char_id))
+kp = np.asarray(kp, dtype=np.float64)
+kd = np.asarray(kd, dtype=np.float64)
+tlim = np.asarray(to_np(e.get_obj_torque_limits(0, char_id)), dtype=np.float64)
 print(f"[dump] kp[:6] {np.round(kp[:6],1)} kd[:6] {np.round(kd[:6],1)} "
       f"tlim[:6] {np.round(tlim[:6],1)}", flush=True)
 
@@ -81,9 +81,9 @@ for t in range(N):
     # buffer holds the position targets; torques for pos drive are
     # internal — approximate with kp*(tar-q)-kd*qd for diffing
     nobs, r, done, info = agent._step_env(action)
-    cmd = to_np(e._get_dof_cmd_buf()[0])
-    q = traj["dof_pos"][-1]
-    qd = traj["dof_vel"][-1]
+    cmd = np.asarray(to_np(e._get_dof_cmd_buf()[0]), dtype=np.float64)
+    q = np.asarray(traj["dof_pos"][-1], dtype=np.float64)
+    qd = np.asarray(traj["dof_vel"][-1], dtype=np.float64)
     traj["q_tar"].append(cmd)
     traj["torque"].append(np.clip(kp * (cmd - q) - kd * qd,
                                   -tlim, tlim))
