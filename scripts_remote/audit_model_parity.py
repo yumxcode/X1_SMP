@@ -42,9 +42,11 @@ body_names = gym.get_actor_rigid_body_names(env_ptr, char_id)
 rows = []
 print("[audit] rigid bodies:", flush=True)
 for nm, p in zip(body_names, rb_props):
-    rows.append((nm, p.mass, tuple(p.inertia)))
+    inertia = p.inertia
+    idiag = (float(inertia.x), float(inertia.y), float(inertia.z))
+    rows.append((nm, float(p.mass), idiag))
     print(f"  {nm:32s} mass {p.mass:8.4f} inertia "
-          f"({p.inertia.x:7.4f},{p.inertia.y:7.4f},{p.inertia.z:7.4f})",
+          f"({idiag[0]:7.4f},{idiag[1]:7.4f},{idiag[2]:7.4f})",
           flush=True)
 out["bodies"] = rows
 
