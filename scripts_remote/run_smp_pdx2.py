@@ -60,7 +60,6 @@ def _apply_pdx2_patches():
     print("[pdx2] patches applied: explicit kp + implicit kd damping",
           flush=True)
 
-_apply_pdx2_patches()
 
 
 # ---- early verification channel: WHICH assets/code is this run using?
@@ -82,6 +81,8 @@ print(f"[verify] commit {_commit} | x1.xml md5 {_md5('data/assets/x1/x1.xml')}"
 # mimickit modules must be importable BEFORE the robustness patches below
 sys.path.insert(0, os.path.join(ROOT, "mimickit"))
 sys.path.insert(0, ROOT)
+
+_apply_pdx2_patches()
 subprocess.check_call([sys.executable, "-m", "pip", "install", "-q",
                        "--no-index", "--no-deps", "--find-links",
                        os.path.join(ROOT, "vendor_wheels"),
