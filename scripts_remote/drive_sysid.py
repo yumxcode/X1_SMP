@@ -47,17 +47,15 @@ env = env_builder.build_env("data/envs/smp_x1_env_v3.yaml",
 char_id = env._get_char_id()
 e = env._engine
 
-from retarget_v3 import X1_DOF_ORDER  # noqa: E402
-
-# probe joints (indices in X1_DOF_ORDER)
-PROBE = {j: X1_DOF_ORDER.index(j) for j in (
-    "right_ankle_roll_joint", "left_ankle_pitch_joint",
-    "right_hip_pitch_joint", "right_knee_pitch_joint",
-    "left_shoulder_pitch_joint", "lumbar_yaw_joint")}
+# probe joints (indices in the X1 depth-first dof order:
+# lumbar 0-2, left arm 3-9, right arm 10-16, left leg 17-22, right leg 23-28)
+PROBE = {"right_ankle_roll_joint": 28, "left_ankle_pitch_joint": 21,
+         "right_hip_pitch_joint": 23, "right_knee_pitch_joint": 26,
+         "left_shoulder_pitch_joint": 3, "lumbar_yaw_joint": 0}
 DELTA = 0.5
 
 out = dict(dof_pos=[], dof_vel=[], dof_force=[], q_tar=[],
-           probe=list(PROBE), delta=DELTA, names=list(X1_DOF_ORDER))
+           probe=list(PROBE), delta=DELTA)
 
 env.reset()
 obs = env._get_curr_obs() if hasattr(env, "_get_curr_obs") else None
