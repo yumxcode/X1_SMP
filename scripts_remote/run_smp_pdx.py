@@ -59,7 +59,10 @@ subprocess.check_call([sys.executable, "-m", "pip", "install", "-q",
 # the pure alignment run — X1_GAIN_RAND env can override)
 os.environ.setdefault("X1_GAIN_RAND", "0.0")
 
-_mf = os.environ.get("X1_MODEL_FILE", "")
+# platform-mounted warm-start checkpoint (resume task); override with
+# X1_MODEL_FILE to run from scratch
+_mf = os.environ.get(
+    "X1_MODEL_FILE", "X1_SMP/upload/**/smp_it2700*.pt")
 
 
 def start_checkpoint_exporter(prefix):
