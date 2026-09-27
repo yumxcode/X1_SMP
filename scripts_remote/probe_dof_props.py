@@ -55,8 +55,10 @@ for n, v, k, dd in zip(names, vel, stiff, damp):
 
 # step test: lift robot 1m (no ground contact), hold q0
 env.reset()
-rp = e.get_root_pos(char_id)
-e.set_root_pos(char_id, rp.clone())
+rp = to_np(e.get_root_pos(char_id)[0]).copy()
+rp[2] += 1.0
+e.set_root_pos(0, char_id, torch.tensor(rp, device=e._root_pos.device,
+                                        dtype=torch.float32))
 import math
 q0 = to_np(e.get_dof_pos(char_id)[0]).copy()
 out = dict(q=[], qd=[], q_tar=[])
@@ -66,7 +68,7 @@ q_tar[3] += DELTA      # left_shoulder_pitch
 q_tar[23] -= DELTA     # right_hip_pitch
 q_tar[26] += DELTA     # right_knee_pitch
 
-for t in range(60):
+for t in range(15):  # <2s free-fall from 1.5m: lands ~17 steps
     out["q"].append(to_np(e.get_dof_pos(char_id)[0]).copy())
     out["qd"].append(to_np(e.get_dof_vel(char_id)[0]).copy())
     e._dof_cmd_raw[0, :29] = torch.tensor(q_tar, device=e._dof_cmd_raw.device)

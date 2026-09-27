@@ -57,6 +57,14 @@ LATENCY_STEPS = 1     # 30 ms action hold
 PUSH_PROB = 0.004     # per control step, per env
 PUSH_FORCE = 25.0     # N horizontal
 PUSH_STEPS = 3        # duration in control steps
+GAIN_RAND = float(os.environ.get("X1_GAIN_RAND", "0.3"))
+# ^ per-episode uniform gain factor U[1-GAIN_RAND, 1+GAIN_RAND] applied to
+# BOTH kp and kd (preserves the damping ratio) via gymapi dof_props on each
+# resetting env. Rationale: same-generation engine-diff experiments proved a
+# persistent first-control-step dof_vel divergence (~3.3 rad/s, contact-free)
+# between PhysX implicit PD and any MuJoCo parametric variant (kp/kd
+# scaling, armature, servo, solref sweeps all rejected). Training the policy
+# to be robust across a ±30% gain band is the surviving engineering route.
 
 
 def start_checkpoint_exporter(prefix):
@@ -149,8 +157,41 @@ def apply_robustness_patches():
 
         orig_reset = agent._reset_envs
 
+        # per-episode gain randomization (C-route): on each resetting env,
+        # rescale the engine's kp/kd by a common factor in
+        # [1-GAIN_RAND, 1+GAIN_RAND]. Uses gymapi per-actor dof_props
+        # (only ~num_resets calls per control step — cheap at 4096 envs).
+        def gainrand_reset(env_ids=None):
+            if (agent._mode == AgentMode.TRAIN and GAIN_RAND > 0
+                    and env_ids is not None and len(env_ids) > 0):
+                try:
+                    env_ = state["env"]
+                    e = env_._engine
+                    gym = e._gym
+                    char_id = env_._get_char_id()
+                    if "base_kp" not in state:
+                        import numpy as _np
+                        kp0, kd0 = e.get_obj_pd_gains(0, char_id)
+                        state["base_kp"] = _np.asarray(kp0, dtype=_np.float32)
+                        state["base_kd"] = _np.asarray(kd0, dtype=_np.float32)
+                        print(f"[gainrand] base kp[:6] "
+                              f"{state['base_kp'][:6]}", flush=True)
+                    import numpy as _np
+                    ids = env_ids.detach().cpu().numpy().tolist()
+                    for env_id in ids:
+                        env_ptr = e.get_env(env_id)
+                        props = gym.get_actor_dof_properties(env_ptr, char_id)
+                        s = float(_np.random.uniform(1.0 - GAIN_RAND,
+                                                     1.0 + GAIN_RAND))
+                        props["stiffness"] = (state["base_kp"] * s)
+                        props["damping"] = (state["base_kd"] * s)
+                        gym.set_actor_dof_properties(env_ptr, char_id, props)
+                except Exception as ex:
+                    print(f"[gainrand] error: {ex}", flush=True)
+            return orig_reset(env_ids)
+
         def noisy_reset(*args, **kwargs):
-            obs, info = orig_reset(*args, **kwargs)
+            obs, info = gainrand_reset(*args, **kwargs)
             if agent._mode == AgentMode.TRAIN:
                 obs = obs + torch.randn_like(obs) * OBS_NOISE
             return obs, info
