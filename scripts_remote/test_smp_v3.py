@@ -32,7 +32,7 @@ from learning.base_agent import AgentMode  # noqa: E402
 NUM_ENVS = 8
 EP_SECONDS = 10.0
 EPISODES = 3
-CKPT = os.environ.get("X1_EVAL_CKPT", "data/models/smp/smp_v3_it2200.pt")
+CKPT = os.environ.get("X1_EVAL_CKPT", "data/models/smp/smp_v3b_it1800.pt")
 
 env = env_builder.build_env("data/envs/smp_x1_env_v3.yaml",
                             "data/engines/isaac_gym_engine.yaml",
