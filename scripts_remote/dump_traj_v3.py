@@ -38,7 +38,7 @@ import torch  # noqa: E402
 import learning.agent_builder as agent_builder  # noqa: E402
 from learning.base_agent import AgentMode  # noqa: E402
 
-CKPT = os.environ.get("X1_DUMP_CKPT", "data/models/smp/smp_v3_it2200.pt")
+CKPT = os.environ.get("X1_DUMP_CKPT", "data/models/smp/smp_v3b_it1800.pt")
 
 env = env_builder.build_env("data/envs/smp_x1_env_v3.yaml",
                             "data/engines/isaac_gym_engine.yaml",
