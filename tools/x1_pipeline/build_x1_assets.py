@@ -232,14 +232,23 @@ def build(tolerance=0.0):
                 "rgba": "0.9 0.5 0.1 1", "group": "1",
             })
 
-        # foot sole box from the 4 collision spheres (ankle_roll links).
-        # In the ankle_roll link frame the sole normal is -y (fore-aft is +-z,
-        # width is +-x). Corner spheres sit at (x=+-0.03, y=-0.0408, z=+-0.07).
+        # foot sole box (ankle_roll links). CRITICAL: the L/R ankle_roll body
+        # frames are MIRRORED (left_ankle_pitch body quat 180deg-about-y vs
+        # right 180deg-about-x, both ankle_roll bodies +90deg-about-y), so
+        # the sole plate lies at local y=-0.0408 on the LEFT foot but at
+        # local y=+0.0408 on the RIGHT foot (measured from the STL meshes in
+        # body frame: sole x extent +-0.056, z extent [-0.093,+0.103]).
+        # v1 bug: both boxes at pos y=-0.043 -> right box sat on the dorsum
+        # (+7.2 cm above the true sole), left box underhung the sole; the
+        # box also under-covered the foot (half 0.032x0.072 vs true
+        # 0.056x0.098). v3: per-side y sign, bottom face 1.5 mm proud of the
+        # mesh sole plane (|y|=0.0423), full-length/full-width footprint.
         if name.endswith("ankle_roll_link"):
+            y_sign = -1.0 if name.startswith("left") else +1.0
             ET.SubElement(body_el, "geom", {
                 "name": f"{name}_sole", "type": "box",
-                "pos": "0 -0.043 0",
-                "size": "0.032 0.012 0.072", "density": "0",
+                "pos": f"0 {y_sign * 0.0303:.4f} 0.005",
+                "size": "0.055 0.012 0.098", "density": "0",
                 "contype": "1", "conaffinity": "1",
                 "friction": "1.0 0.05 0.05", "condim": "4",
                 "rgba": "1 0.5 1 1", "group": "1",
