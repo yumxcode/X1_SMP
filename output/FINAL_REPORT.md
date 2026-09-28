@@ -12,7 +12,7 @@
 | ② 数据集与验证器 | ✅ 12/16 片段严格 PASS（R1-R9+J1-J3，sample_step=1）；4 排除均为源级问题（穿步×3/节奏×1）；验证器自证（站立正例过/v2 坏例败） |
 | ③ SMP 训练（Isaac 侧） | ✅ 固定资产代 v3b：reward 0.27@it2747，Isaac eval 8/8×3ep×10s（\|vx\| 1.3-1.8 m/s，root_z 0.58 与正确站立 0.6016 自洽） |
 | ④ MuJoCo sim2sim（pos-mode 策略） | ❌ 0/4×10s（<0.5s 倒）——**引擎驱动语义差异同代坐实**（§四证据链），与用户怀疑(2)兼容：他任务可迁移的条件未被 pos-mode 训练重现 |
-| ⑤ sim2sim 解决路线 | 🔄 pd_explicit 训练中（TASK_20260928_017）：Isaac 逐子步显式 clip(kp·Δq−kd·qd,±tlim)+DOF_MODE_EFFORT，与 MuJoCo harness 逐语义相同——构造性对齐，结果待续报 |
+| ⑤ sim2sim 解决路线 | ⚠️ **语义对齐方向验证有效但未闭合**：pdx2（显式 kp+隐式 kd，与 MuJoCo harness 逐语义相同）使首步差 3.3→2.4、开环存活翻倍、轨迹偏差 mm 级；闭环仍 0/8（中位 0.70s）——PhysX TGS vs MuJoCo 求解器级残差超出现策略稳定域；增益随机化 ±15/±30% 均无效（§4.3 终局裁决） |
 
 ---
 
@@ -60,9 +60,20 @@
 
 **结论**：Isaac Gym `DOF_MODE_POS` 的 PhysX TGS 隐式位置驱动与 MuJoCo 任何参数化显式/伺服实现存在**求解器级语义差异**，首步 3.3 rad/s 的关节速度差超出当前策略稳定域。用户怀疑(2)（同 URDF 他任务可通 sim2sim）与之兼容——那些任务大概率是 Isaac **Lab**（非 Gym preview）/effort-mode/低动态；本任务的 pos-mode 隐式驱动条件正是不可迁移的那类。
 
-### 4.3 解决路线：pd_explicit（进行中）
+### 4.3 解决路线裁决（终局，2026-09-28）
 
-MimicKit `pd_explicit` 引擎模式：Isaac 端逐物理子步计算 `τ=clip(kp·(q_tar−q)−kd·q̇, ±tlim)` 并以 `DOF_MODE_EFFORT` 施加——与 MuJoCo harness **逐语义相同**（同样的公式、限幅、施加点）。动作界/obs 与 pos 模式完全一致（char_env 共享 `_build_action_bounds_pos`），v3 prior 与 v3b it2700 热启动有效。TASK_20260928_015→017（平台两次回收后续训）：pd_explicit 生效验证（reward 0.001 起步重适应，属预期——等价于在 MuJoCo 同语义动力学下重学）。**裁决待收敛后补：PASS 则构造性对齐成立；FAIL 则调查接触建模差异。**
+**主路线 pd_explicit（语义对齐）——方向正确但未闭合**：
+- v1（T015/017，stock pd_explicit）：Isaac 纯显式 PD（damping 清零）在 X1 小惯量关节上**数值不稳定**（首步 dof_vel 46 rad/s 振荡；MuJoCo harness 回放 diff 坐实）——已停
+- v2「pdx2」（T020/032）：patch 为「显式 clip(kp·Δq,±tlim) + PhysX 隐式 kd 阻尼」——与 MuJoCo harness **逐语义相同**。对齐效果定量：首步 dof_vel diff 3.3→2.4 rad/s、开环回放 0.63→1.17s、30 步 root_z 偏差 ~6mm（pos-mode 为发散 0.4m）、Isaac 侧 it600 即 8/8 稳（T022）
+- 但闭环 sim2sim：纯 pdx2 曲线 0.88→0.77→0.67→0.70s（it600→3600 平台，0/8）；±15% 增益随机化（T032）0.45→0.47→0.55s——**劣于**纯 pdx2（随机化破坏 Isaac 端精确动力学，且 ±15/±30% 均覆盖不了求解器数值残差）。两任务均已按用户成本指令停止（T020 终值 ckpt it3600 md5 1daf5feb，T032 it1900 md5 22a572f3）
+
+**残余差异定位**：同代同资产、参数全对齐（含 frictionloss 清零、solver/cone/Newton/noslip/condim6、margin 0-20mm、时标 33.3/35ms、effort 限幅、armature）后仍存 **2.4 rad/s 首步关节速度差**——PhysX TGS 与 MuJoCo 在隐式阻尼+接触数值解算上的**求解器级残差**，非任何配置项可消除。当前策略（含鲁棒化）稳定域不足以吸收。
+
+**对用户怀疑(2)的回应**：同 URDF 他任务可通 sim2sim 的可迁移条件存在，但**不是 Isaac Gym preview 的 DOF_MODE_POS 隐式驱动**；本任务已实证两条可行方向：
+1. **pd_explicit/pdx2 语义对齐**（本报告，方向正确、残差待更强鲁棒化或 Isaac Lab 训练闭合）
+2. **Isaac Lab 训练**（他任务大概率路径）——mimickit 已有 isaac_lab_engine.py，后续训练建议迁移
+
+**遗留路线**（按性价比排序）：①迁移 Isaac Lab 重训（消除 Gym preview 求解器语义）②MuJoCo 端引擎微调（需自建 MuJoCo 训练引擎，成本高）③超宽增益随机化（±50-100%，训练风险大、证据不足）
 
 ---
 
@@ -77,8 +88,10 @@ MimicKit `pd_explicit` 引擎模式：Isaac 端逐物理子步计算 `τ=clip(kp
 | sim2sim（--env 可选） | `sim2sim_validate.py`（frictionloss 对齐固化）+ `aligned_actuator_test.py`（双重阻尼修复） |
 | 引擎差异证据链 | `{dump_v3b_diff,dump_v3_channels,first_step_ode_bench,drive_scale_match2,airborne_step_mj,margin_test,cushion_sweep,reset_dz_probe,replay_by_torque,drive_identify}.py`；dump `isaac_traj_v3_fixed.pt`/`isaac_traj_v3b_fixed.pt`；审计 `isaac_model_audit`（T013） |
 | 远端探针 | `scripts_remote/{probe_dof_props,audit_model_parity,dump_traj_v3,dump_traj_v3b_forces}.py` |
-| 训练配置族 | `data/envs/smp_x1_env_v3.yaml`、`data/engines/isaac_gym_engine_pdx.yaml`、`tinymdm_x1_run_v3.yaml`、`run_smp_pdx*.py` |
-| 权重（固定资产代） | `output/remote_ckpt/{smp_v3b_it1800,smp_v3b_it2700,smp_v3c_it1800}.pt`、prior `data/models/smp_priors/x1_run_v3_prior.pt`（md5 2731005c） |
+| 训练配置族 | `data/envs/smp_x1_env_v3.yaml`、`data/engines/isaac_gym_engine_pdx.yaml`、`tinymdm_x1_run_v3.yaml`、`run_smp_pdx{,2,2r}*.py`、`test_smp_pdx2.py`、`dump_traj_pdx{,2}.py` |
+| mesh 渲染器（sim2sim+重定向，含地面修复） | `render_sim2sim_mesh.py`、`render_clip_v3.py`（floor ±3m→±200m，修复世界坐标悬空假象） |
+| 权重（固定资产代） | `output/remote_ckpt/{smp_v3b_it1800,smp_v3b_it2700,smp_v3c_it1800,smp_v3c_it2300,smppdx_it2200,smppdx_it3000,smppdx_it3600,smppdxr_it600,smppdxr_it1200,smppdxr_it1900}.pt`、prior `data/models/smp_priors/x1_run_v3_prior.pt`（md5 2731005c） |
+| mesh 渲染视频 | `output/renders/sim2sim_pdx2_it3600_mesh_seed1.mp4`（URDF mesh）、`v3_{run1_subject5_seg0,sprint1_subject4_seg1}.mp4` |
 
 ## 六、诚实性声明
 

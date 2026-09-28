@@ -65,6 +65,12 @@ def main():
     pl = X1Player(args.pkl)
     # mesh model for the X1 side (same 29 joints by name)
     mx = mujoco.MjModel.from_xml_path(str(X1_SRC_MJCF))
+    # FIX: extend the visual floor — retarget pkls live at arbitrary world
+    # coords beyond the mjcf floor's |y|<=3 m coverage (robots would be
+    # rendered hovering over a void)
+    for g in range(mx.ngeom):
+        if (mx.geom(g).name or '') == 'floor':
+            mx.geom_size[g][1] = 200.0
     dx = mujoco.MjData(mx)
     xadr = np.array([mx.joint(j).qposadr[0] for j in X1_DOF_ORDER])
 
