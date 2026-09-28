@@ -125,21 +125,23 @@ class Policy:
 
 
 class Sim2Sim:
-    def __init__(self, policy):
+    def __init__(self, policy, sim_xml=None, asset_xml=None):
         import mujoco
         from retarget_g1_x1 import X1_DOF_ORDER
         from build_x1_assets import parse_urdf_limits
 
         self.mj = mujoco
         self.policy = policy
-        m = self.m = mujoco.MjModel.from_xml_path(str(X1_SIM))
+        sim_path = Path(sim_xml) if sim_xml else X1_SIM
+        asset_path = Path(asset_xml) if asset_xml else X1_ASSET
+        m = self.m = mujoco.MjModel.from_xml_path(str(sim_path))
         m.opt.timestep = 1.0 / 120.0  # match Isaac sim freq
         self.d = mujoco.MjData(m)
 
         self.qadr = np.array([m.joint(j).qposadr[0] for j in X1_DOF_ORDER])
         self.vadr = np.array([m.joint(m.joint(j).id).dofadr[0]
                               for j in X1_DOF_ORDER])
-        mi = mujoco.MjModel.from_xml_path(str(X1_ASSET))
+        mi = mujoco.MjModel.from_xml_path(str(asset_path))
         self.kp = np.array([mi.jnt_stiffness[mi.joint(j).id]
                             for j in X1_DOF_ORDER])
         self.kd = np.array([mi.dof_damping[mi.joint(mi.joint(j).id).dofadr[0]]
@@ -417,11 +419,17 @@ def main():
     ap.add_argument("--json", default=None)
     ap.add_argument("--env", default="data/envs/smp_x1_env.yaml",
                     help="env yaml whose motion_file defines the reset dataset")
+    ap.add_argument("--asset", default=None,
+                    help="asset xml to read kp/kd from (default x1.xml; "
+ "pass data/assets/x1/x1_v4.xml for v4 low-gain checkpoints)")
+    ap.add_argument("--sim", default=None,
+                    help="sim xml to roll out (default x1_sim.xml; v4 "
+ "checkpoints need x1_sim_v4.xml for consistent gains)")
     args = ap.parse_args()
 
     pol = Policy(args.ckpt)
     Sim2Sim.ENV_YAML_REL = args.env  # class attr: read inside __init__
-    sim = Sim2Sim(pol)
+    sim = Sim2Sim(pol, sim_xml=args.sim, asset_xml=args.asset)
     results = []
     for ep in range(args.episodes):
         sim.reset(args.seed + ep)
