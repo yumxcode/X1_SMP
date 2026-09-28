@@ -329,28 +329,30 @@ sys.argv = ["run.py", "--mode", "train", "--num_envs", "4096",
             "--visualize", "false", "--out_dir", "output/",
             "--save_int_models", "true",
             "--max_samples", os.environ.get("X1_MAX_SAMPLES", "500000000")]
-_mf = os.environ.get("X1_MODEL_FILE", "smppdx_it3600.pt")
+_mf = os.environ.get("X1_MODEL_FILE", "smpv4_it1000.pt")
 if _mf:
     import glob as _glob
-    # exact-basename search, upload mounts preferred; the repo itself
-    # contains stale committed ckpts (e.g. data/models/smp/smppdx_it1500.pt)
-    # whose fresh clone mtimes made the old mtime-sorted glob pick them
-    # over the platform-mounted warm-start file
+    # exact-basename search, priority: platform upload mount > repo-committed
+    # warm-start (data/models/smp/<base>) > anywhere-except-repo-models.
+    # The repo contains stale committed ckpts (smppdx_it1500.pt etc.) whose
+    # fresh clone mtimes made the old mtime-sorted glob pick them over the
+    # platform-mounted warm-start file — hence exact-name, priority-ordered.
     base = os.path.basename(_mf)
     pats = [os.path.join("/workspace", "**", "upload", "**", base),
-            os.path.join(ROOT, "upload", "**", base),
+            os.path.join(ROOT, "data", "models", "smp", base),
             os.path.join("/workspace", "**", base)]
     cands, pick = [], None
-    for p in pats:
-        cands = sorted(_glob.glob(p, recursive=True))
-        cands = [c for c in cands if "/data/models/" not in c]
-        if cands:
-            pick = cands[0]
+    for i, p in enumerate(pats):
+        c = sorted(_glob.glob(p, recursive=True))
+        if i == 2:  # generic catch-all: exclude stale repo ckpts
+            c = [x for x in c if "/data/models/" not in x]
+        if c:
+            pick = c[0]
             break
     if pick is None:
         raise RuntimeError(f"X1_MODEL_FILE matched nothing; tried {pats}")
     sys.argv += ["--model_file", pick]
-    print(f"[resume] warm-start candidates {cands} -> {pick}", flush=True)
+    print(f"[resume] warm-start: {pick}", flush=True)
 runpy.run_path(os.path.join(ROOT, "mimickit", "run.py"), run_name="__main__")
 
 try:
