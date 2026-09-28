@@ -171,6 +171,7 @@ def apply_robustness_patches():
 
     def build_agent(*a, **kw):
         agent = orig_build_agent(*a, **kw)
+        state["agent"] = agent
 
         orig_decide = agent._decide_action
         orig_step = agent._step_env
@@ -328,25 +329,28 @@ sys.argv = ["run.py", "--mode", "train", "--num_envs", "4096",
             "--visualize", "false", "--out_dir", "output/",
             "--save_int_models", "true",
             "--max_samples", os.environ.get("X1_MAX_SAMPLES", "500000000")]
-_mf = os.environ.get("X1_MODEL_FILE", "X1_SMP/upload/**/smppdx_it*.pt")
+_mf = os.environ.get("X1_MODEL_FILE", "smppdx_it3600.pt")
 if _mf:
     import glob as _glob
-    pats = [_mf] + [os.path.join(ROOT, _f)
-                    for _f in (_mf, _mf.lstrip("./"))]
-    pats += [os.path.join("/workspace", "**", os.path.basename(_mf)),
-             os.path.join(ROOT, "**", os.path.basename(_mf))]
-    cands = []
+    # exact-basename search, upload mounts preferred; the repo itself
+    # contains stale committed ckpts (e.g. data/models/smp/smppdx_it1500.pt)
+    # whose fresh clone mtimes made the old mtime-sorted glob pick them
+    # over the platform-mounted warm-start file
+    base = os.path.basename(_mf)
+    pats = [os.path.join("/workspace", "**", "upload", "**", base),
+            os.path.join(ROOT, "upload", "**", base),
+            os.path.join("/workspace", "**", base)]
+    cands, pick = [], None
     for p in pats:
-        cands += _glob.glob(p, recursive=True)
-    cands = sorted(set(cands), key=os.path.getmtime)
-    if not cands:
-        cands = sorted(_glob.glob(os.path.join(
-            "/workspace", "**", os.path.basename(_mf)), recursive=True),
-            key=os.path.getmtime)
-    if not cands:
+        cands = sorted(_glob.glob(p, recursive=True))
+        cands = [c for c in cands if "/data/models/" not in c]
+        if cands:
+            pick = cands[0]
+            break
+    if pick is None:
         raise RuntimeError(f"X1_MODEL_FILE matched nothing; tried {pats}")
-    sys.argv += ["--model_file", cands[-1]]
-    print(f"[resume] loading agent weights: {cands[-1]}", flush=True)
+    sys.argv += ["--model_file", pick]
+    print(f"[resume] warm-start candidates {cands} -> {pick}", flush=True)
 runpy.run_path(os.path.join(ROOT, "mimickit", "run.py"), run_name="__main__")
 
 try:
