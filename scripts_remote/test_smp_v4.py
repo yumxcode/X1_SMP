@@ -55,14 +55,19 @@ _ige.IsaacGymEngine._calc_pd_explicit_torque = _calc_pdx2_torque
 print("[v4/pdx2] eval patches applied", flush=True)
 
 if not CKPT:
-    cands = sorted(glob.glob(os.path.join(
-        ROOT, "data", "models", "smp", "smpv4*.pt")))
-    cands += sorted(glob.glob(os.path.join(
-        ROOT, "upload", "**", "smpv4*.pt"), recursive=True))
-    cands += sorted(glob.glob("/workspace/**/smpv4*.pt", recursive=True))
-    if not cands:
-        raise RuntimeError("no smpv4* ckpt found; set X1_EVAL_CKPT")
-    CKPT = cands[-1]
+    # fixed eval name first (unambiguous), else any smpv4* ckpt
+    _fixed = os.path.join(ROOT, "data", "models", "smp", "smpv4_eval.pt")
+    if os.path.exists(_fixed):
+        CKPT = _fixed
+    else:
+        cands = sorted(glob.glob(os.path.join(
+            ROOT, "data", "models", "smp", "smpv4*.pt")))
+        cands += sorted(glob.glob(os.path.join(
+            ROOT, "upload", "**", "smpv4*.pt"), recursive=True))
+        cands += sorted(glob.glob("/workspace/**/smpv4*.pt", recursive=True))
+        if not cands:
+            raise RuntimeError("no smpv4* ckpt found; set X1_EVAL_CKPT")
+        CKPT = cands[-1]
 
 env = env_builder.build_env("data/envs/smp_x1_env_v4.yaml",
                             "data/engines/isaac_gym_engine_pdx.yaml",
