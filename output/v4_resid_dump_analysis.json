@@ -1,0 +1,320 @@
+{
+ "experiment": "E-v4-RESID-02",
+ "prereg": "SW-PREREG-001 (commit 94454223)",
+ "dump": "isaac_traj_v4.pt (TASK_20260929_163, md5 a66b6a32fff41aa5)",
+ "first_step": {
+  "i": 0,
+  "rms": 9.369956195101821,
+  "max": 17.84180776632023,
+  "worst_joint": "right_elbow_yaw_joint",
+  "worst_sat": 0.09069442749023438,
+  "n_sat_joints": 5,
+  "max_sat_frac": 1.0,
+  "tau_max": 180.0
+ },
+ "rows": [
+  {
+   "i": 0,
+   "rms": 9.369956195101821,
+   "max": 17.84180776632023,
+   "worst_joint": "right_elbow_yaw_joint",
+   "worst_sat": 0.09069442749023438,
+   "n_sat_joints": 5,
+   "max_sat_frac": 1.0,
+   "tau_max": 180.0
+  },
+  {
+   "i": 1,
+   "rms": 9.589776490242915,
+   "max": 20.916053307993018,
+   "worst_joint": "right_hip_yaw_joint",
+   "worst_sat": 1.0,
+   "n_sat_joints": 4,
+   "max_sat_frac": 1.0,
+   "tau_max": 150.0
+  },
+  {
+   "i": 2,
+   "rms": 9.686141080037197,
+   "max": 19.31228757278762,
+   "worst_joint": "left_elbow_pitch_joint",
+   "worst_sat": 0.8108828067779541,
+   "n_sat_joints": 3,
+   "max_sat_frac": 1.0,
+   "tau_max": 110.88419437408447
+  },
+  {
+   "i": 3,
+   "rms": 9.076061235555628,
+   "max": 26.920953928944982,
+   "worst_joint": "right_hip_pitch_joint",
+   "worst_sat": 0.2281664808591207,
+   "n_sat_joints": 10,
+   "max_sat_frac": 1.0,
+   "tau_max": 180.0
+  },
+  {
+   "i": 4,
+   "rms": 9.103884680374032,
+   "max": 21.539172841758713,
+   "worst_joint": "right_hip_pitch_joint",
+   "worst_sat": 0.4039823015530904,
+   "n_sat_joints": 7,
+   "max_sat_frac": 1.0,
+   "tau_max": 180.0
+  },
+  {
+   "i": 5,
+   "rms": 9.165487225970107,
+   "max": 19.809402462898433,
+   "worst_joint": "left_elbow_pitch_joint",
+   "worst_sat": 0.7317638397216797,
+   "n_sat_joints": 3,
+   "max_sat_frac": 1.0,
+   "tau_max": 145.5876186490059
+  },
+  {
+   "i": 6,
+   "rms": 9.153595817809025,
+   "max": 19.60620134664856,
+   "worst_joint": "left_elbow_pitch_joint",
+   "worst_sat": 0.9795444011688232,
+   "n_sat_joints": 6,
+   "max_sat_frac": 1.0,
+   "tau_max": 150.0
+  },
+  {
+   "i": 7,
+   "rms": 7.497804955833858,
+   "max": 14.997805098617249,
+   "worst_joint": "right_hip_pitch_joint",
+   "worst_sat": 0.5233388642470042,
+   "n_sat_joints": 5,
+   "max_sat_frac": 1.0,
+   "tau_max": 180.0
+  },
+  {
+   "i": 8,
+   "rms": 7.228798992878905,
+   "max": 17.31131429963625,
+   "worst_joint": "right_hip_pitch_joint",
+   "worst_sat": 0.30228594938913983,
+   "n_sat_joints": 6,
+   "max_sat_frac": 1.0,
+   "tau_max": 180.0
+  },
+  {
+   "i": 9,
+   "rms": 7.9389733926071715,
+   "max": 20.231615397966017,
+   "worst_joint": "left_elbow_pitch_joint",
+   "worst_sat": 0.9262216091156006,
+   "n_sat_joints": 2,
+   "max_sat_frac": 1.0,
+   "tau_max": 115.02896547317505
+  },
+  {
+   "i": 10,
+   "rms": 7.084696983541584,
+   "max": 18.769457457517845,
+   "worst_joint": "left_elbow_pitch_joint",
+   "worst_sat": 1.0,
+   "n_sat_joints": 3,
+   "max_sat_frac": 1.0,
+   "tau_max": 88.70255649089813
+  },
+  {
+   "i": 11,
+   "rms": 8.159307204417704,
+   "max": 23.215806706082986,
+   "worst_joint": "left_hip_yaw_joint",
+   "worst_sat": 1.0,
+   "n_sat_joints": 7,
+   "max_sat_frac": 1.0,
+   "tau_max": 180.0
+  },
+  {
+   "i": 12,
+   "rms": 7.369107992064767,
+   "max": 15.886408767402767,
+   "worst_joint": "left_elbow_pitch_joint",
+   "worst_sat": 0.03478670120239258,
+   "n_sat_joints": 6,
+   "max_sat_frac": 1.0,
+   "tau_max": 114.2771852016449
+  },
+  {
+   "i": 13,
+   "rms": 7.529354065080226,
+   "max": 16.275619709084992,
+   "worst_joint": "left_elbow_pitch_joint",
+   "worst_sat": 0.8174149990081787,
+   "n_sat_joints": 2,
+   "max_sat_frac": 1.0,
+   "tau_max": 154.57014441490173
+  },
+  {
+   "i": 14,
+   "rms": 6.854707873081227,
+   "max": 18.72299335778725,
+   "worst_joint": "left_hip_pitch_joint",
+   "worst_sat": 0.3249618411064148,
+   "n_sat_joints": 3,
+   "max_sat_frac": 1.0,
+   "tau_max": 180.0
+  },
+  {
+   "i": 15,
+   "rms": 12.175065673957834,
+   "max": 30.502487072211764,
+   "worst_joint": "left_elbow_pitch_joint",
+   "worst_sat": 1.0,
+   "n_sat_joints": 4,
+   "max_sat_frac": 1.0,
+   "tau_max": 125.47012567520142
+  },
+  {
+   "i": 16,
+   "rms": 8.893031599627129,
+   "max": 21.337821336897612,
+   "worst_joint": "left_elbow_pitch_joint",
+   "worst_sat": 0.857696533203125,
+   "n_sat_joints": 5,
+   "max_sat_frac": 1.0,
+   "tau_max": 169.55096125602722
+  },
+  {
+   "i": 17,
+   "rms": 8.831247967847744,
+   "max": 18.753713358289037,
+   "worst_joint": "right_elbow_pitch_joint",
+   "worst_sat": 0.21744370460510254,
+   "n_sat_joints": 5,
+   "max_sat_frac": 1.0,
+   "tau_max": 150.0
+  },
+  {
+   "i": 18,
+   "rms": 9.515447788717173,
+   "max": 21.15548427642587,
+   "worst_joint": "left_elbow_pitch_joint",
+   "worst_sat": 0.961848258972168,
+   "n_sat_joints": 6,
+   "max_sat_frac": 1.0,
+   "tau_max": 180.0
+  },
+  {
+   "i": 19,
+   "rms": 9.454673096697201,
+   "max": 21.158163503821285,
+   "worst_joint": "left_elbow_pitch_joint",
+   "worst_sat": 0.1519927978515625,
+   "n_sat_joints": 3,
+   "max_sat_frac": 1.0,
+   "tau_max": 180.0
+  },
+  {
+   "i": 20,
+   "rms": 8.876887894040904,
+   "max": 21.688369266032666,
+   "worst_joint": "left_elbow_pitch_joint",
+   "worst_sat": 1.0,
+   "n_sat_joints": 4,
+   "max_sat_frac": 1.0,
+   "tau_max": 113.89787793159485
+  },
+  {
+   "i": 21,
+   "rms": 9.244218271586973,
+   "max": 21.47936556921862,
+   "worst_joint": "right_elbow_pitch_joint",
+   "worst_sat": 1.0,
+   "n_sat_joints": 7,
+   "max_sat_frac": 1.0,
+   "tau_max": 91.33278429508209
+  },
+  {
+   "i": 22,
+   "rms": 9.14607115721773,
+   "max": 20.621626037123765,
+   "worst_joint": "right_elbow_pitch_joint",
+   "worst_sat": 0.5757386684417725,
+   "n_sat_joints": 3,
+   "max_sat_frac": 1.0,
+   "tau_max": 98.8107830286026
+  },
+  {
+   "i": 23,
+   "rms": 8.522575537210525,
+   "max": 23.836958349818367,
+   "worst_joint": "left_elbow_pitch_joint",
+   "worst_sat": 0.13457894325256348,
+   "n_sat_joints": 2,
+   "max_sat_frac": 1.0,
+   "tau_max": 113.05546760559082
+  },
+  {
+   "i": 24,
+   "rms": 8.384662194275668,
+   "max": 21.763709286213906,
+   "worst_joint": "left_elbow_pitch_joint",
+   "worst_sat": 0.34152960777282715,
+   "n_sat_joints": 2,
+   "max_sat_frac": 1.0,
+   "tau_max": 110.73708236217499
+  },
+  {
+   "i": 25,
+   "rms": 8.687758308862906,
+   "max": 22.257009769067018,
+   "worst_joint": "right_ankle_roll_joint",
+   "worst_sat": 0.4471343709155917,
+   "n_sat_joints": 2,
+   "max_sat_frac": 1.0,
+   "tau_max": 64.54283259809017
+  },
+  {
+   "i": 26,
+   "rms": 8.690697903780187,
+   "max": 21.049465260217033,
+   "worst_joint": "right_ankle_pitch_joint",
+   "worst_sat": 0.14061069436138496,
+   "n_sat_joints": 5,
+   "max_sat_frac": 1.0,
+   "tau_max": 110.25759682059288
+  },
+  {
+   "i": 27,
+   "rms": 8.903650101269289,
+   "max": 20.19885391731881,
+   "worst_joint": "left_elbow_pitch_joint",
+   "worst_sat": 0.6320970058441162,
+   "n_sat_joints": 4,
+   "max_sat_frac": 1.0,
+   "tau_max": 157.01085180044174
+  },
+  {
+   "i": 28,
+   "rms": 9.846419309775362,
+   "max": 20.634672787274596,
+   "worst_joint": "left_elbow_pitch_joint",
+   "worst_sat": 0.8507664203643799,
+   "n_sat_joints": 4,
+   "max_sat_frac": 1.0,
+   "tau_max": 180.0
+  },
+  {
+   "i": 29,
+   "rms": 8.682341086153757,
+   "max": 19.021460171527636,
+   "worst_joint": "left_elbow_pitch_joint",
+   "worst_sat": 0.02678847312927246,
+   "n_sat_joints": 6,
+   "max_sat_frac": 1.0,
+   "tau_max": 180.0
+  }
+ ],
+ "mean_rms": 8.755413402520551,
+ "overall_max": 30.502487072211764,
+ "verdict_band": ">=2.0"
+}

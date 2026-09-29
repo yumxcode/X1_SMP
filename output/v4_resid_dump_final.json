@@ -1,0 +1,191 @@
+{
+ "ckpt": "abs18642 final (TASK_20260929_165 dump, md5 d1c28f55af03)",
+ "first_step": {
+  "rms": 8.931397412821488,
+  "max": 25.437799712742766,
+  "worst": "right_hip_pitch_joint"
+ },
+ "mean_rms": 8.407695208257616,
+ "rows": [
+  {
+   "i": 0,
+   "rms": 8.931397412821488,
+   "max": 25.437799712742766,
+   "worst": "right_hip_pitch_joint"
+  },
+  {
+   "i": 1,
+   "rms": 8.274811950194978,
+   "max": 21.921475834950034,
+   "worst": "right_hip_pitch_joint"
+  },
+  {
+   "i": 2,
+   "rms": 8.625367613208358,
+   "max": 17.684201565788726,
+   "worst": "left_elbow_pitch_joint"
+  },
+  {
+   "i": 3,
+   "rms": 8.47165582468167,
+   "max": 18.737625298037525,
+   "worst": "left_elbow_pitch_joint"
+  },
+  {
+   "i": 4,
+   "rms": 8.212223141657853,
+   "max": 20.271981655770922,
+   "worst": "left_elbow_pitch_joint"
+  },
+  {
+   "i": 5,
+   "rms": 8.33501462141944,
+   "max": 19.697130729117006,
+   "worst": "left_elbow_pitch_joint"
+  },
+  {
+   "i": 6,
+   "rms": 8.293945149735828,
+   "max": 21.17069077898158,
+   "worst": "left_elbow_pitch_joint"
+  },
+  {
+   "i": 7,
+   "rms": 8.490642189371341,
+   "max": 20.234893191225417,
+   "worst": "left_elbow_pitch_joint"
+  },
+  {
+   "i": 8,
+   "rms": 8.50989580326787,
+   "max": 19.181089635115008,
+   "worst": "right_elbow_yaw_joint"
+  },
+  {
+   "i": 9,
+   "rms": 9.264286173069314,
+   "max": 21.04642250761646,
+   "worst": "left_elbow_pitch_joint"
+  },
+  {
+   "i": 10,
+   "rms": 7.780622077198879,
+   "max": 21.69445122885302,
+   "worst": "left_elbow_pitch_joint"
+  },
+  {
+   "i": 11,
+   "rms": 8.260170473182374,
+   "max": 21.837477818166004,
+   "worst": "left_elbow_pitch_joint"
+  },
+  {
+   "i": 12,
+   "rms": 7.991553824341817,
+   "max": 22.58301926581783,
+   "worst": "left_elbow_pitch_joint"
+  },
+  {
+   "i": 13,
+   "rms": 9.238727464132287,
+   "max": 25.414489532779292,
+   "worst": "left_elbow_pitch_joint"
+  },
+  {
+   "i": 14,
+   "rms": 8.580014836122642,
+   "max": 21.119798428409403,
+   "worst": "left_elbow_pitch_joint"
+  },
+  {
+   "i": 15,
+   "rms": 8.726596629107677,
+   "max": 22.06965810950924,
+   "worst": "left_elbow_pitch_joint"
+  },
+  {
+   "i": 16,
+   "rms": 8.412925583908107,
+   "max": 19.845699143159283,
+   "worst": "left_elbow_pitch_joint"
+  },
+  {
+   "i": 17,
+   "rms": 8.43462408409438,
+   "max": 22.94651313298915,
+   "worst": "left_elbow_pitch_joint"
+  },
+  {
+   "i": 18,
+   "rms": 8.654310819069842,
+   "max": 19.809346878832137,
+   "worst": "left_elbow_pitch_joint"
+  },
+  {
+   "i": 19,
+   "rms": 8.710250443010223,
+   "max": 23.47736795060744,
+   "worst": "left_elbow_pitch_joint"
+  },
+  {
+   "i": 20,
+   "rms": 7.868356553905727,
+   "max": 18.10235546903773,
+   "worst": "left_elbow_pitch_joint"
+  },
+  {
+   "i": 21,
+   "rms": 8.370519642013374,
+   "max": 21.09008463486268,
+   "worst": "left_elbow_pitch_joint"
+  },
+  {
+   "i": 22,
+   "rms": 8.892703186329907,
+   "max": 18.90164390068187,
+   "worst": "left_elbow_pitch_joint"
+  },
+  {
+   "i": 23,
+   "rms": 8.389115774438542,
+   "max": 21.01781392151781,
+   "worst": "left_elbow_pitch_joint"
+  },
+  {
+   "i": 24,
+   "rms": 8.438096469742936,
+   "max": 17.904304626655364,
+   "worst": "right_elbow_yaw_joint"
+  },
+  {
+   "i": 25,
+   "rms": 7.843315999730264,
+   "max": 16.892098912468505,
+   "worst": "right_elbow_yaw_joint"
+  },
+  {
+   "i": 26,
+   "rms": 7.6655075091815545,
+   "max": 16.968643982247084,
+   "worst": "left_elbow_yaw_joint"
+  },
+  {
+   "i": 27,
+   "rms": 7.814870508347053,
+   "max": 18.11545616435144,
+   "worst": "left_elbow_pitch_joint"
+  },
+  {
+   "i": 28,
+   "rms": 8.152963771871855,
+   "max": 17.48580449216555,
+   "worst": "left_elbow_yaw_joint"
+  },
+  {
+   "i": 29,
+   "rms": 8.596370718570865,
+   "max": 20.145578166684135,
+   "worst": "left_elbow_pitch_joint"
+  }
+ ]
+}
