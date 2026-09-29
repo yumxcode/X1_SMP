@@ -1,0 +1,128 @@
+{
+ "experiment": "E-v4-NAN-01",
+ "rows": [
+  {
+   "seed": 101,
+   "nan": null,
+   "huge_qvel": 0.033,
+   "fell": 0.43
+  },
+  {
+   "seed": 102,
+   "nan": null,
+   "huge_qvel": 0.125,
+   "fell": 0.97
+  },
+  {
+   "seed": 103,
+   "nan": null,
+   "huge_qvel": null,
+   "fell": 0.5
+  },
+  {
+   "seed": 104,
+   "nan": null,
+   "huge_qvel": null,
+   "fell": 0.4
+  },
+  {
+   "seed": 105,
+   "nan": null,
+   "huge_qvel": null,
+   "fell": 0.53
+  },
+  {
+   "seed": 106,
+   "nan": null,
+   "huge_qvel": null,
+   "fell": 0.47
+  },
+  {
+   "seed": 107,
+   "nan": null,
+   "huge_qvel": null,
+   "fell": 0.63
+  },
+  {
+   "seed": 108,
+   "nan": null,
+   "huge_qvel": null,
+   "fell": 0.47
+  },
+  {
+   "seed": 109,
+   "nan": null,
+   "huge_qvel": null,
+   "fell": 0.63
+  },
+  {
+   "seed": 110,
+   "nan": null,
+   "huge_qvel": null,
+   "fell": 0.53
+  },
+  {
+   "seed": 111,
+   "nan": null,
+   "huge_qvel": null,
+   "fell": 0.97
+  },
+  {
+   "seed": 112,
+   "nan": null,
+   "huge_qvel": null,
+   "fell": 0.53
+  },
+  {
+   "seed": 113,
+   "nan": null,
+   "huge_qvel": null,
+   "fell": 0.4
+  },
+  {
+   "seed": 114,
+   "nan": null,
+   "huge_qvel": null,
+   "fell": 0.53
+  },
+  {
+   "seed": 115,
+   "nan": null,
+   "huge_qvel": null,
+   "fell": 0.57
+  },
+  {
+   "seed": 116,
+   "nan": null,
+   "huge_qvel": null,
+   "fell": 1.3
+  },
+  {
+   "seed": 117,
+   "nan": null,
+   "huge_qvel": null,
+   "fell": 0.53
+  },
+  {
+   "seed": 118,
+   "nan": null,
+   "huge_qvel": null,
+   "fell": 0.63
+  },
+  {
+   "seed": 119,
+   "nan": null,
+   "huge_qvel": null,
+   "fell": 0.53
+  },
+  {
+   "seed": 120,
+   "nan": null,
+   "huge_qvel": null,
+   "fell": 0.6
+  }
+ ],
+ "nan_n": 0,
+ "huge_n": 2,
+ "huge_before_fell": 2
+}

@@ -1,0 +1,76 @@
+{
+ "experiment": "E-v4-STATIC-01",
+ "note": "perfect static init + hold-home, run_episode semantics",
+ "results": {
+  "v4_stock": {
+   "fell_t": 1.7333333333333334,
+   "root_z0": 0.6231351598526124,
+   "root_z_end": 0.28457175254823547,
+   "root_z_med": 0.6207887957348216,
+   "root_z_min": 0.28457175254823547,
+   "ankle_defl_med": 0.09495497336636725,
+   "ankle_defl_max": 0.1591408373849975,
+   "knee_defl_med": 0.30826527082221145,
+   "knee_defl_max": 0.3320984958421892,
+   "tau_ratio_max": 0.2767487465351577,
+   "init_root_z": 0.6024,
+   "init_min_sole_z": 0.001
+  },
+  "v3_highgain": {
+   "fell_t": 1.8333333333333333,
+   "root_z0": 0.6035624542361474,
+   "root_z_end": 0.25935548506269435,
+   "root_z_med": 0.6011857530117767,
+   "root_z_min": 0.25935548506269435,
+   "ankle_defl_med": 0.056988049357687864,
+   "ankle_defl_max": 0.08671321723227926,
+   "knee_defl_med": 0.00935656650597505,
+   "knee_defl_max": 0.02758787352666847,
+   "tau_ratio_max": 0.21678304308069815,
+   "init_root_z": 0.6024,
+   "init_min_sole_z": 0.001
+  },
+  "v4_ankle100_2": {
+   "fell_t": 1.6333333333333333,
+   "root_z0": 0.6224207344416789,
+   "root_z_end": 0.29802888704780306,
+   "root_z_med": 0.620295160180246,
+   "root_z_min": 0.29802888704780306,
+   "ankle_defl_med": 0.07900076379344417,
+   "ankle_defl_max": 0.10292142483348526,
+   "knee_defl_med": 0.3048883345613664,
+   "knee_defl_max": 0.3328727628385647,
+   "tau_ratio_max": 0.27739396903213726,
+   "init_root_z": 0.6024,
+   "init_min_sole_z": 0.001
+  },
+  "v4_ankle150_3": {
+   "fell_t": 1.6,
+   "root_z0": 0.6224271392528465,
+   "root_z_end": 0.27698957121687884,
+   "root_z_med": 0.6195636724883427,
+   "root_z_min": 0.27698957121687884,
+   "ankle_defl_med": 0.0650544876466311,
+   "ankle_defl_max": 0.07645694425877242,
+   "knee_defl_med": 0.30256819054289763,
+   "knee_defl_max": 0.3334686969646396,
+   "tau_ratio_max": 0.2778905808038663,
+   "init_root_z": 0.6024,
+   "init_min_sole_z": 0.001
+  },
+  "v4_kpx1.5": {
+   "fell_t": 1.7,
+   "root_z0": 0.6223775307574124,
+   "root_z_end": 0.26287021543426026,
+   "root_z_med": 0.6166930845474851,
+   "root_z_min": 0.26287021543426026,
+   "ankle_defl_med": 0.06380577818674985,
+   "ankle_defl_max": 0.12902232757243354,
+   "knee_defl_med": 0.24652740965679776,
+   "knee_defl_max": 0.2620983080600417,
+   "tau_ratio_max": 0.3276228850750521,
+   "init_root_z": 0.6024,
+   "init_min_sole_z": 0.001
+  }
+ }
+}

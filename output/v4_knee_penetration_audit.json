@@ -1,0 +1,26 @@
+{
+  "experiment": "E-v4-KNEE-01",
+  "method": "offline FK over demo frames; knee-capsule surface min z (axis-segment min z minus r=0.048) vs ground; sole = bottom corners of sole box",
+  "asset": "data/assets/x1/x1_sim_v4.xml (x1_v4 gains; geometry shared with x1_sim.xml)",
+  "dataset_v3": {
+    "yaml": "data/datasets/dataset_x1_run_v3.yaml",
+    "clips": 12,
+    "knee_below_ground_pct_per_clip": [58.8, 40.4, 46.2, 39.2, 53.4, 65.0, 67.6, 38.8, 25.0, 48.6, 30.2, 25.0],
+    "knee_min_z_mm_range": [-5.2, -4.8],
+    "sole_min_z_mm": 0.5,
+    "note": "R8 gate lifts root so SOLE bottom = +0.5mm; knee capsules are NOT checked and penetrate up to 5.2mm in 25-68% of frames per clip"
+  },
+  "dataset_v2": {
+    "yaml": "data/datasets/dataset_x1_run_v2.yaml",
+    "clips": 11,
+    "knee_below_ground_pct_per_clip": [27.6, 25.9, 33.2, 27.8, 33.7, 28.1, 35.2, 22.7, 15.2, 23.3, 22.7],
+    "knee_min_z_mm_range": [-50.5, -24.9],
+    "sole_min_z_mm_range": [-86.2, -9.8],
+    "note": "v2 dataset superseded; both sole and knee penetrate deeply"
+  },
+  "home_pose_static": {
+    "knee_penetration_mm": [4.47, 4.38],
+    "init_contacts": ["floor|left_knee_pitch_link_col", "floor|right_knee_pitch_link_col"],
+    "note": "explains E-v4-STATIC-01 fall: robot rests on knees, pitches forward (6deg@0.8s -> 53deg@1.6s)"
+  }
+}
