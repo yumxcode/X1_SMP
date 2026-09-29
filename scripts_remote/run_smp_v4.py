@@ -329,7 +329,7 @@ sys.argv = ["run.py", "--mode", "train", "--num_envs", "4096",
             "--visualize", "false", "--out_dir", "output/",
             "--save_int_models", "true",
             "--max_samples", os.environ.get("X1_MAX_SAMPLES", "500000000")]
-_mf = os.environ.get("X1_MODEL_FILE", "smpv4_it3600.pt")
+_mf = os.environ.get("X1_MODEL_FILE", "smpv4_it3814.pt")
 if _mf:
     import glob as _glob
     # exact-basename search, priority: platform upload mount > repo-committed
