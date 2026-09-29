@@ -90,9 +90,14 @@ for ep in range(EPISODES):
     root_x = np.zeros((n_steps, NUM_ENVS))
     fall_t = np.full(NUM_ENVS, np.inf)
     done_any = np.zeros(NUM_ENVS, dtype=bool)
+    # IDEA-008: collect disc_obs for offline sds (maturity metric without DR)
+    disc_obs_list = []
     for t in range(n_steps):
         action, _ = agent._decide_action(agent._curr_obs, agent._curr_info)
         obs, r, done, info = agent._step_env(action)
+        if isinstance(info, dict) and "disc_obs" in info:
+            d = info["disc_obs"]
+            disc_obs_list.append(d.detach().cpu() if hasattr(d, "detach") else np.asarray(d))
         agent._curr_obs, agent._curr_info = agent._reset_done_envs(done)
         rp = engine.get_root_pos(char_id).cpu().numpy()
         root_z[t] = rp[:, 2]
@@ -102,10 +107,23 @@ for ep in range(EPISODES):
         done_any |= fell_now
     path = np.abs(np.diff(root_x, axis=0)).sum(axis=0)
     speed = path / EP_SECONDS
+    sds_str = ""
+    if disc_obs_list:
+        try:
+            all_disc = torch.cat([torch.as_tensor(d, dtype=torch.float32, device="cuda:0")
+                                  for d in disc_obs_list], dim=0)
+            b = all_disc.shape[0]
+            reshaped = all_disc.reshape(b, env._num_disc_obs_steps, -1)
+            norm = agent._prior_model.normalize(reshaped)
+            _, sds_info = agent._calc_smp_rewards(norm.reshape(b, -1))
+            sds_str = f" | sds_loss_mean {float(sds_info['sds_loss_mean']):.4f}"
+            sds_str += f" (n={b} frames, no-DR eval)"
+        except Exception as exc:  # sds is auxiliary; never block eval
+            sds_str = f" | sds collection FAILED: {exc}"
     print(f"[smp-eval-v4] ep{ep}: fall_t med {np.median(fall_t):.2f}s "
           f"(min {np.min(fall_t):.2f}) | alive>9s: "
           f"{int(np.sum(fall_t > 9.0))}/{NUM_ENVS} | "
           f"|vx| med {np.median(speed):.2f} m/s | "
-          f"rootz med {np.median(root_z):.3f}", flush=True)
+          f"rootz med {np.median(root_z):.3f}{sds_str}", flush=True)
 
 print("[smp-eval-v4] done", flush=True)
