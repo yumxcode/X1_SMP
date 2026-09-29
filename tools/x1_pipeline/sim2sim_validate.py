@@ -199,6 +199,7 @@ class Sim2Sim:
         ds = REPO_ROOT / _re.search(
             r'"([^"]+)"', ds_line).group(1)
         print(f"[sim2sim] reset dataset: {ds.name}")
+        self.dataset_name = ds.name
         for line in ds.read_text().splitlines():
             m_ = _re.search(r'file:\s*"([^"]+)"', line)
             if m_:
@@ -417,8 +418,12 @@ def main():
     ap.add_argument("--len", type=float, default=10.0)
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--json", default=None)
-    ap.add_argument("--env", default="data/envs/smp_x1_env.yaml",
-                    help="env yaml whose motion_file defines the reset dataset")
+    ap.add_argument("--env", default="data/envs/smp_x1_env_v4.yaml",
+                    help="env yaml whose motion_file defines the reset dataset "
+                         "(default = current v4 generation; the old default "
+                         "smp_x1_env.yaml pointed at the v2 dataset whose "
+                         "frames penetrate up to -86mm - resetting there is "
+                         "OOD for v3/v4 checkpoints)")
     ap.add_argument("--asset", default=None,
                     help="asset xml to read kp/kd from (default x1.xml; "
  "pass data/assets/x1/x1_v4.xml for v4 low-gain checkpoints)")
@@ -447,7 +452,10 @@ def main():
               f"v={r['S2_gait']['mean_speed_mps']:.2f}, "
               f"S3 pitch {r['S3_morphology']['torso_pitch_deg']:.0f}deg)")
     n_pass = sum(r["PASS"] for r in results)
-    summary = dict(checkpoint=str(args.ckpt), episodes=results,
+    summary = dict(checkpoint=str(args.ckpt),
+                   env=args.env,
+                   reset_dataset=getattr(sim, "dataset_name", None),
+                   episodes=results,
                    pass_episodes=n_pass, total=len(results),
                    PASS=bool(n_pass == len(results)))
     if args.json:
