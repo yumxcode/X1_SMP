@@ -130,8 +130,16 @@ def _apply_fixed_reset_patch():
 def _apply_pd_shape_diag_patch():
     """r3 lesson: newton 1.2.1 Controls API drifted from the engine code
     (written/tested against newton 1.0.0): tar_dof - dof_pos shapes not
-    broadcastable. Print all relevant shapes once, then re-raise."""
+    broadcastable. r4-diag (TASK_20260930_046) resolved it:
+      joint_q (36,) = qpos space [pos3, quat4, joints29]
+      joint_target_pos/joint_qd/kp_raw/kd_raw/joint_f (35,) = dof space
+      [root6, joints29] (root entries zero, tar[:8] observed zero at 0-5)
+    -> engine's dof_pos = sim_state.joint_q is a qpos/dof space mismatch.
+    Fix (below, class patch - engine file left untouched for other newton
+    versions): reassemble dof-space positions joint_q[7:] -> dof_pos[6:].
+    """
     import warp as _wp
+    import torch as _torch
     import engines.newton_engine as _ne
 
     def _diag(self, sim_state, control):
@@ -145,15 +153,34 @@ def _apply_pd_shape_diag_patch():
               f"kd_raw {tuple(self._kd_raw.shape)} "
               f"joint_f {tuple(control.joint_f.shape)} "
               f"torque_lim {tuple(self._torque_lim_raw.shape)}", flush=True)
-        # also expose a small slice to see ordering
         print(f"[newton-probe] q[:8]  {_wp.to_torch(q)[:8].tolist()}",
               flush=True)
         print(f"[newton-probe] tar[:8] {_wp.to_torch(tar)[:8].tolist()}",
               flush=True)
         raise RuntimeError("shape-diag-complete")
 
+    def _dof_space_apply(self, sim_state, control):
+        q = _wp.to_torch(sim_state.joint_q)            # (nq,) qpos space
+        qd = _wp.to_torch(sim_state.joint_qd)          # (nv,) dof space
+        tar = _wp.to_torch(control.joint_target_pos)   # (nv,) dof space
+        kp = _wp.to_torch(self._kp_raw)
+        kd = _wp.to_torch(self._kd_raw)
+        lim = _wp.to_torch(self._torque_lim_raw)
+        nv = int(qd.shape[0])
+        nq = int(q.shape[0])
+        q_off = nq - (nv - 6)  # 7 for floating base (pos3+quat4 vs root6)
+        dof_pos = _torch.zeros(nv, dtype=q.dtype)
+        dof_pos[6:] = q[q_off:]
+        torque = kp * (tar - dof_pos) - kd * qd
+        torque = _torch.clamp(torque, -lim, lim)
+        _wp.copy(control.joint_f,
+                 _wp.from_torch(torque.contiguous(),
+                                dtype=control.joint_f.dtype))
+
     if os.environ.get("X1_PROBE_SHAPE_DIAG", "") == "1":
         _ne.NewtonEngine._apply_pd_explicit_torque = _diag
+    else:
+        _ne.NewtonEngine._apply_pd_explicit_torque = _dof_space_apply
 
 
 _apply_fixed_reset_patch()
