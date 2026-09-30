@@ -347,7 +347,7 @@ out_path = os.path.join(ROOT, "output", f"x1_il_entry_{TAG}.pt")
 torch.save(out, out_path)
 print(f"[x1-il] saved {out_path} md5 "
       f"{hashlib.md5(open(out_path,'rb').read()).hexdigest()[:12]}", flush=True)
-dv1 = traj["dof_vel"][1].numpy()
+dv1 = np.asarray(traj["dof_vel"][1])
 i = int(np.argmax(np.abs(dv1 - ref["dof_vel"][1].numpy())))
 print(f"[x1-il] step1 dof_vel[:6] {np.round(dv1[:6], 3)} | vs anchor "
       f"max {np.max(np.abs(dv1 - ref['dof_vel'][1].numpy())):.3f} at "
