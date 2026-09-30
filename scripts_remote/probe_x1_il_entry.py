@@ -198,6 +198,21 @@ raw_pos, raw_vel = raw_joint_state()
 print(f"[x1-il] state0 sources: expected dp[:6] "
       f"{np.round(dp_exp[:6], 4)} | data {np.round(s0['dof_pos'][:6], 4)} "
       f"| raw {np.round(raw_pos[:6], 4)}", flush=True)
+
+# r5/r6 diagnosis: dump FULL vectors to derive the true view dof order
+# locally (observed: values land in wrong joints; only idx0 coincidental).
+if os.environ.get("X1_IL_DIAG", "") == "1":
+    import warp as _wp
+    _view = x1.root_physx_view
+    art_full = (_wp.to_torch(_view.get_dof_positions()).cpu()
+                .numpy().astype(np.float64).reshape(-1)[:29])
+    print("[x1-il] DIAG expected dp (X1 order):", flush=True)
+    print(f"[x1-il] {np.round(dp_exp, 4).tolist()}", flush=True)
+    print("[x1-il] DIAG art view pos (no perm):", flush=True)
+    print(f"[x1-il] {np.round(art_full, 4).tolist()}", flush=True)
+    print(f"[x1-il] DIAG art_names: {art_names}", flush=True)
+    raise RuntimeError("diag-full-vectors-dumped")
+
 pos_dev = float(np.max(np.abs(raw_pos - dp_exp)))
 vel_dev = float(np.max(np.abs(raw_vel - dv_exp)))
 print(f"[x1-il] state0 readback: dof_pos dev {pos_dev:.2e} "
