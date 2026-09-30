@@ -29,7 +29,9 @@ N_PROBE = 8
 SUBSTEPS = 4
 DT = 1.0 / 120.0
 ANCHOR_DUMP = "output/remote_ckpt/isaac_traj_v4_solver_tgs4_0_gpu.pt"
-X1_XML = "data/assets/x1/x1_v4.xml"
+X1_XML = os.environ.get(
+    "X1_IL_XML",
+    "data/assets/x1/x1_v4.xml")  # F3 uses the frictionloss=0 copy
 # per-joint gain groups computed locally from x1_v4.xml + anchor dump
 # (kp,kd from MJCF joint stiffness/damping == anchor kp/kd; tlim = effort
 # limits; armature from MJCF). r1 lesson: MjcfFileCfg does NOT map joint
