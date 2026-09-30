@@ -65,6 +65,13 @@ class IsaacGymEngine(engine.Engine):
         self._timestep = 1.0 / control_freq
         self._sim_steps = int(sim_freq / control_freq)
         sim_timestep = 1.0 / sim_freq
+        # PhysX solver precision family, exposed for engine yaml config
+        # (defaults preserve the historical hardcoded TGS 4/0 behavior).
+        # SW-PREREG-002 / IDEA-009: these were never varied before the
+        # solver-family scan, so training and dumps always ran TGS 4/0.
+        self._physx_solver_type = int(config.get("physx_solver_type", 1))
+        self._physx_pos_iterations = int(config.get("physx_position_iterations", 4))
+        self._physx_vel_iterations = int(config.get("physx_velocity_iterations", 0))
         self._sim = self._create_simulator(sim_timestep, visualize, record_video)
 
         self._ground_contact_height = config.get("ground_contact_height", 0.3)
@@ -698,9 +705,9 @@ class IsaacGymEngine(engine.Engine):
         sim_params.gravity.z = -9.81
         
         sim_params.physx.num_threads = 4
-        sim_params.physx.solver_type = 1
-        sim_params.physx.num_position_iterations = 4
-        sim_params.physx.num_velocity_iterations = 0
+        sim_params.physx.solver_type = self._physx_solver_type
+        sim_params.physx.num_position_iterations = self._physx_pos_iterations
+        sim_params.physx.num_velocity_iterations = self._physx_vel_iterations
         sim_params.physx.contact_offset = 0.02
         sim_params.physx.rest_offset = 0.0
         sim_params.physx.bounce_threshold_velocity = 0.2

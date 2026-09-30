@@ -90,6 +90,8 @@ for ep in range(EPISODES):
     root_x = np.zeros((n_steps, NUM_ENVS))
     fall_t = np.full(NUM_ENVS, np.inf)
     done_any = np.zeros(NUM_ENVS, dtype=bool)
+    # IDEA-011: alive mask per (t, env) for fall-masked sds
+    alive = np.ones((n_steps, NUM_ENVS), dtype=bool)
     # IDEA-008: collect disc_obs for offline sds (maturity metric without DR)
     disc_obs_list = []
     for t in range(n_steps):
@@ -105,6 +107,7 @@ for ep in range(EPISODES):
         fell_now = (rp[:, 2] < 0.30) & (~done_any)
         fall_t[fell_now] = t / 30.0
         done_any |= fell_now
+        alive[t] = ~done_any
     path = np.abs(np.diff(root_x, axis=0)).sum(axis=0)
     speed = path / EP_SECONDS
     sds_str = ""
@@ -118,6 +121,16 @@ for ep in range(EPISODES):
             _, sds_info = agent._calc_smp_rewards(norm.reshape(b, -1))
             sds_str = f" | sds_loss_mean {float(sds_info['sds_loss_mean']):.4f}"
             sds_str += f" (n={b} frames, no-DR eval)"
+            # IDEA-011: fall-masked sds (exclude frames after fall, root_z<0.30)
+            mask = torch.as_tensor(alive.reshape(-1), dtype=torch.bool,
+                                   device="cuda:0")
+            masked_disc = reshaped[mask]
+            if masked_disc.shape[0] > 0:
+                norm_m = agent._prior_model.normalize(masked_disc)
+                _, sds_info_m = agent._calc_smp_rewards(norm_m.reshape(masked_disc.shape[0], -1))
+                sds_str += (f" | sds_loss_mean_fallmasked "
+                            f"{float(sds_info_m['sds_loss_mean']):.4f}"
+                            f" (n={int(mask.sum())}/{b} frames)")
         except Exception as exc:  # sds is auxiliary; never block eval
             sds_str = f" | sds collection FAILED: {exc}"
     print(f"[smp-eval-v4] ep{ep}: fall_t med {np.median(fall_t):.2f}s "
