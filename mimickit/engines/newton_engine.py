@@ -336,6 +336,18 @@ class NewtonEngine(engine.Engine):
         else:
             self._control_mode = engine.ControlMode.none
 
+        # SW-PREREG-003 / IDEA-012r: kd semantics for pd_explicit.
+        # explicit (default) = engine historical behavior: kp*(tar-q) - kd*qd
+        #   fully explicit (kd included in the torque), passive damping zeroed.
+        # implicit = pdx2-mirror: explicit kp only, kd kept as
+        #   dof_passive_damping for the solver's implicit integration
+        #   (parity with sim2sim harness, sim2sim_validate.py:162-166).
+        self._pd_kd_mode = config.get("pd_kd_mode", "explicit")
+        assert(self._pd_kd_mode in ("explicit", "implicit"))
+        # SolverMuJoCo impratio: engine historical default 10; MuJoCo CPU
+        # default/harness is 1.0 (IDEA-012 D config axis).
+        self._impratio = config.get("impratio", 10)
+
         self._build_ground()
 
         if (visualize):
@@ -862,7 +874,13 @@ class NewtonEngine(engine.Engine):
             self._sim_model.joint_target_ke.fill_(0.0)
             self._sim_model.joint_target_kd.fill_(0.0)
             self._kp_raw = wp.clone(kp)
-            self._kd_raw = wp.clone(kd)
+            if (self._pd_kd_mode == "implicit"):
+                # pdx2-mirror: explicit torque uses kp only; kd remains in
+                # dof_passive_damping (not zeroed below) for the solver's
+                # implicit integration.
+                self._kd_raw = wp.zeros_like(kd)
+            else:
+                self._kd_raw = wp.clone(kd)
             self._torque_lim_raw = wp.clone(self._sim_model.joint_effort_limit)
             self._sim_model.joint_target_mode.fill_(int(newton.JointTargetMode.EFFORT))
 
@@ -870,7 +888,11 @@ class NewtonEngine(engine.Engine):
             assert(False), "Unsupported control mode: {}".format(self._control_mode)
         
         self._sim_model.mujoco.dof_passive_stiffness.fill_(0.0)
-        self._sim_model.mujoco.dof_passive_damping.fill_(0.0)
+        if (self._control_mode == engine.ControlMode.pd_explicit
+                and self._pd_kd_mode == "implicit"):
+            pass  # keep kd as passive damping (implicit path)
+        else:
+            self._sim_model.mujoco.dof_passive_damping.fill_(0.0)
 
         num_envs = self.get_num_envs()
         self._controls = Controls(self._sim_model, num_envs)
@@ -882,7 +904,7 @@ class NewtonEngine(engine.Engine):
             solver="newton",
             njmax=450,
             nconmax=150,
-            impratio=10,
+            impratio=self._impratio,
             iterations=100,
             ls_iterations=50
         )
