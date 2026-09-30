@@ -97,6 +97,7 @@ app_launcher = AppLauncher(headless=True, offscreen_render=False)
 simulation_app = app_launcher.app
 
 import torch  # noqa: E402
+import numpy as np  # noqa: E402
 import isaaclab.sim as sim_utils  # noqa: E402
 from isaaclab.assets import Articulation, ArticulationCfg  # noqa: E402
 from isaaclab.sim.spawners.from_files import UrdfFileCfg  # noqa: E402
@@ -141,7 +142,8 @@ pend = Articulation(art_cfg)
 sim.reset()
 
 # inertia sanity print (must match MuJoCo mirror; asserted in analysis)
-mass = pend.root_physx_view.get_masses().clone()
+mass = torch.as_tensor(np.asarray(pend.root_physx_view.get_masses()),
+                       dtype=torch.float32).cpu()
 print(f"[il-probe] masses {mass.tolist()}", flush=True)
 
 N_ENV = 1
@@ -188,17 +190,16 @@ for q0 in Q0_OFFSETS:
 results["zero"] = run_seq(Q0_OFFSETS[0], Q0_OFFSETS[0], MODE)
 
 out = dict(qd_step=results["step"], qd_zero=results["zero"],
-           meta=results["config"], masses=mass.detach().cpu().numpy().tolist())
+           meta=results["config"], masses=mass.tolist())
 out_path = os.path.join(ROOT, "output", f"isaaclab_joint_probe_{TAG}.pt")
 torch.save(out, out_path)
 print(f"[il-probe] saved {out_path} md5 "
       f"{hashlib.md5(open(out_path,'rb').read()).hexdigest()[:12]}", flush=True)
 print(f"[il-probe] {TAG} step q0=0.2 qd[:4] "
       f"{[round(x, 4) for x in results['step']['0.2'][:4]]}", flush=True)
-
-simulation_app.close()
-# r1 lesson: AppLauncher may swallow exceptions -> exit code unreliable;
-# enforce explicit failure when the dump was not produced
+# r1/r2 lesson: AppLauncher swallows exceptions and close() hard-exits;
+# do the dump-existence check BEFORE close(), exit non-zero on missing
 if not os.path.exists(out_path):
     print("[il-probe] FATAL: dump not produced", flush=True)
     sys.exit(1)
+simulation_app.close()
