@@ -266,7 +266,13 @@ if os.environ.get("X1_IL_WRIST_CODED", "") == "1":
     print(f"[x1-il] {np.round(art_full, 4).tolist()}", flush=True)
     raise RuntimeError("diag-wrist-coded-dumped")
 
-pos_dev = float(np.max(np.abs(raw_pos - dp_exp)))
+dp_exp_chk = dp_exp
+if MARGIN > 0:  # F2: compare against the CLIPPED expectation (r1 lesson:
+    # margin clip is the probe design, not a state mismatch)
+    _lo = np.array([l[0] for l in X1_LIMITS]) + MARGIN
+    _hi = np.array([l[1] for l in X1_LIMITS]) - MARGIN
+    dp_exp_chk = np.clip(dp_exp, _lo, _hi)
+pos_dev = float(np.max(np.abs(raw_pos - dp_exp_chk)))
 vel_dev = float(np.max(np.abs(raw_vel - dv_exp)))
 print(f"[x1-il] state0 readback: dof_pos dev {pos_dev:.2e} "
       f"dof_vel dev {vel_dev:.2e} (must be < 1e-5)", flush=True)
@@ -299,6 +305,10 @@ for t in range(N_ROLLOUT):
 # ---- zero-error probe ----
 inject_state(0)
 q0 = ref["dof_pos"][0].numpy().astype(np.float64)
+if MARGIN > 0:
+    _lo = np.array([l[0] for l in X1_LIMITS]) + MARGIN
+    _hi = np.array([l[1] for l in X1_LIMITS]) - MARGIN
+    q0 = np.clip(q0, _lo, _hi)
 probe = dict(root_pos=[], root_quat=[], root_vel=[], root_ang_vel=[],
              dof_pos=[], dof_vel=[], q0=q0)
 st = read_state()
