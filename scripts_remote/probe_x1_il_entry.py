@@ -179,25 +179,14 @@ def read_state():
 
 def raw_joint_state():
     """Raw PhysX joint state (bypasses data-cache staleness), X1 order.
-    IsaacLab 6.x ArticulationView API name varies -> fallback chain +
-    dir() dump (r3 lesson: no get_joints in 6.x)."""
+    IsaacLab 6.x: get_dof_positions()/get_dof_velocities() return single
+    warp arrays (not tuples) -> wp.to_torch conversion."""
+    import warp as _wp
     view = x1.root_physx_view
-    pos = vel = None
-    for name in ("get_joints", "get_dof_positions", "get_joint_positions"):
-        if hasattr(view, name):
-            print(f"[x1-il] raw source: {name}", flush=True)
-            try:
-                j = getattr(view, name)()
-                pos = np.asarray(j[0], dtype=np.float64).reshape(-1)[:29]
-                vel = np.asarray(j[1], dtype=np.float64).reshape(-1)[:29]
-                break
-            except Exception as exc:  # noqa: BLE001
-                print(f"[x1-il] {name} failed: {exc}", flush=True)
-    if pos is None:
-        cands = [a for a in dir(view)
-                 if "joint" in a.lower() or "dof" in a.lower()]
-        print(f"[x1-il] view joint/dof attrs: {cands}", flush=True)
-        raise RuntimeError("no raw joint state API found")
+    pos = (_wp.to_torch(view.get_dof_positions()).detach().cpu()
+           .numpy().astype(np.float64).reshape(-1)[:29])
+    vel = (_wp.to_torch(view.get_dof_velocities()).detach().cpu()
+           .numpy().astype(np.float64).reshape(-1)[:29])
     return pos[perm].copy(), vel[perm].copy()
 
 
