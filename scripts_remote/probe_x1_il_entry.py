@@ -213,6 +213,33 @@ if os.environ.get("X1_IL_DIAG", "") == "1":
     print(f"[x1-il] DIAG art_names: {art_names}", flush=True)
     raise RuntimeError("diag-full-vectors-dumped")
 
+# r7 diagnosis: code the 4 ambiguous all-zero wrist joints (+left_hip_yaw)
+# with unique values to pin their view slots (write in joint_names order).
+if os.environ.get("X1_IL_WRIST_CODED", "") == "1":
+    _coded = dict(dp_exp)  # not used; build per-art vector below
+    _probe_vals = {"left_wrist_pitch_joint": 0.11,
+                   "right_wrist_pitch_joint": 0.22,
+                   "left_wrist_roll_joint": 0.33,
+                   "right_wrist_roll_joint": 0.44,
+                   "left_hip_yaw_joint": 0.55}
+    dp_art = np.zeros(29)
+    for _i, _n in enumerate(X1_DOF_ORDER):
+        dp_art[art_names.index(_n)] = dp_exp[_i]
+    for _n, _v in _probe_vals.items():
+        dp_art[art_names.index(_n)] = _v
+    x1.write_joint_state_to_sim(
+        torch.tensor(dp_art.reshape(1, -1), dtype=torch.float32,
+                     device=DEVICE),
+        torch.zeros(1, 29, dtype=torch.float32, device=DEVICE))
+    x1.update(DT)
+    import warp as _wp
+    _view = x1.root_physx_view
+    art_full = (_wp.to_torch(_view.get_dof_positions()).cpu()
+                .numpy().astype(np.float64).reshape(-1)[:29])
+    print("[x1-il] DIAG wrist-coded view pos (no perm):", flush=True)
+    print(f"[x1-il] {np.round(art_full, 4).tolist()}", flush=True)
+    raise RuntimeError("diag-wrist-coded-dumped")
+
 pos_dev = float(np.max(np.abs(raw_pos - dp_exp)))
 vel_dev = float(np.max(np.abs(raw_vel - dv_exp)))
 print(f"[x1-il] state0 readback: dof_pos dev {pos_dev:.2e} "
