@@ -30,6 +30,17 @@ SUBSTEPS = 4
 DT = 1.0 / 120.0
 ANCHOR_DUMP = "output/remote_ckpt/isaac_traj_v4_solver_tgs4_0_gpu.pt"
 X1_XML = "data/assets/x1/x1_v4.xml"
+# per-joint gain groups computed locally from x1_v4.xml + anchor dump
+# (kp,kd from MJCF joint stiffness/damping == anchor kp/kd; tlim = effort
+# limits; armature from MJCF). r1 lesson: MjcfFileCfg does NOT map joint
+# stiffness/damping into the PhysX drive (readback all-zero) -> supply
+# explicit per-group ImplicitActuatorCfg. Runtime-verified vs dump below.
+GAIN_GROUPS = [
+    (20.0, 1.0, 10.0, 0.005), (40.0, 2.0, 20.0, 0.01),
+    (50.0, 1.0, 80.0, 0.02), (120.0, 3.0, 150.0, 0.02),
+    (120.0, 4.0, 150.0, 0.02), (150.0, 4.0, 180.0, 0.02),
+    (150.0, 5.0, 180.0, 0.02), (150.0, 8.0, 180.0, 0.02),
+]
 
 sys.path.insert(0, os.path.join(ROOT, "tools/x1_pipeline"))
 from retarget_g1_x1 import X1_DOF_ORDER  # noqa: E402
@@ -70,12 +81,29 @@ physics_material = sim_utils.RigidBodyMaterialCfg(
 plane_cfg = GroundPlaneCfg(physics_material=physics_material)
 spawn_ground_plane(prim_path="/World/ground", cfg=plane_cfg)
 
+# Build per-group joint name lists by matching the anchor dump gains
+# (names are unique across X1_DOF_ORDER and the MJCF articulation order,
+# so explicit name lists are order-independent).
+_name_groups = {g: [] for g in GAIN_GROUPS}
+for _i, _n in enumerate(X1_DOF_ORDER):
+    _key = (float(kp_dof[_i]), float(kd_dof[_i]), float(tlim_dof[_i]), 0.0)
+    # find armature group member by kp/kd/tlim triple
+    _match = [g for g in GAIN_GROUPS
+              if g[0] == _key[0] and g[1] == _key[1] and g[2] == _key[2]]
+    assert len(_match) == 1, f"gain triple not unique for {_n}: {_match}"
+    _name_groups[_match[0]].append(_n)
+
+actuators = {}
+for _gi, _g in enumerate(GAIN_GROUPS):
+    actuators[f"g{_gi}"] = ImplicitActuatorCfg(
+        joint_names_expr=list(_name_groups[_g]),
+        stiffness=_g[0], damping=_g[1], effort_limit=_g[2], armature=_g[3])
+
 art_cfg = ArticulationCfg(
     prim_path="/World/x1",
     spawn=MjcfFileCfg(asset_path=X1_XML, fix_base=False),
     init_state=ArticulationCfg.InitialStateCfg(pos=(0.0, 0.0, 0.6)),
-    actuators={"joints": ImplicitActuatorCfg(
-        joint_names_expr=[".*"], stiffness=None, damping=None)},
+    actuators=actuators,
 )
 x1 = Articulation(art_cfg)
 sim.reset()
