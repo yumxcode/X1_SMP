@@ -30,6 +30,8 @@ import subprocess
 import sys
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+SELF = os.path.abspath(__file__)   # absolute BEFORE chdir (gm-run may use a
+                                   # relative script path; child re-exec needs it)
 os.chdir(ROOT)
 
 CONFIGS = [
@@ -61,15 +63,19 @@ def run_child(tag, solver_type, pos_iter, vel_iter, pipeline):
     })
     print(f"[solver-scan] === {tag}: solver_type={solver_type} "
           f"pos={pos_iter} vel={vel_iter} pipeline={pipeline} ===", flush=True)
-    proc = subprocess.run([sys.executable, __file__], env=env,
+    proc = subprocess.run([sys.executable, SELF], env=env,
                           capture_output=True, text=True, timeout=900)
     out = proc.stdout + proc.stderr
-    # relay child tail so key lines reach the platform log
+    # relay key lines so they reach the platform log
     tail = [ln for ln in out.splitlines()
             if ("[solver-scan]" in ln or "[v4-dump]" in ln
                 or "Error" in ln or "error" in ln or "Traceback" in ln)]
     for ln in tail[-40:]:
         print(ln, flush=True)
+    if proc.returncode != 0:
+        print(f"[solver-scan] child {tag} failed; full output tail:", flush=True)
+        for ln in out.splitlines()[-25:]:
+            print(f"  {ln}", flush=True)
     out_path = os.path.join(ROOT, "output", f"isaac_traj_v4_solver_{tag}.pt")
     status = "OK" if proc.returncode == 0 else f"FAIL rc={proc.returncode}"
     md5 = _md5(out_path) if os.path.exists(out_path) else "missing"
