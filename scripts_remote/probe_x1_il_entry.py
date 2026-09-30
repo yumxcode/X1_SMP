@@ -149,6 +149,14 @@ def inject_state(frame=0):
     ra = ref["root_ang_vel"][frame].numpy().astype(np.float64)
     dp = ref["dof_pos"][frame].numpy().astype(np.float64)
     dv = ref["dof_vel"][frame].numpy().astype(np.float64)
+    # r8 root fix: write vector must be SCATTERED into joint_names order
+    # (W[perm[i]] = dp[i]). The old dp[perm] was a double permutation -
+    # roundtrip is identity (r6 V == dp[perm] bitwise; r7 wrist-coded
+    # identity), so reads were always correct and only the write was wrong.
+    dp_art = np.empty(29)
+    dv_art = np.empty(29)
+    dp_art[perm] = dp
+    dv_art[perm] = dv
     pose = torch.tensor([[rp[0], rp[1], rp[2],
                           rq[3], rq[0], rq[1], rq[2]]],  # wxyz
                         dtype=torch.float32, device=DEVICE)
@@ -157,9 +165,9 @@ def inject_state(frame=0):
     x1.write_root_pose_to_sim(pose)
     x1.write_root_velocity_to_sim(vel)
     x1.write_joint_state_to_sim(
-        torch.tensor(dp[perm].reshape(1, -1), dtype=torch.float32,
+        torch.tensor(dp_art.reshape(1, -1), dtype=torch.float32,
                      device=DEVICE),
-        torch.tensor(dv[perm].reshape(1, -1), dtype=torch.float32,
+        torch.tensor(dv_art.reshape(1, -1), dtype=torch.float32,
                      device=DEVICE))
     x1.update(DT)
     return rp, rq, rv, ra, dp, dv
@@ -258,8 +266,10 @@ for t in range(N_ROLLOUT):
     traj["dof_pos"].append(st["dof_pos"])
     traj["dof_vel"].append(st["dof_vel"])
     target = q_tar_seq[t]
+    t_art = np.empty(29)
+    t_art[perm] = target
     x1.set_joint_position_target(
-        torch.tensor(target[perm].reshape(1, -1), dtype=torch.float32,
+        torch.tensor(t_art.reshape(1, -1), dtype=torch.float32,
                      device=DEVICE))
     x1.write_data_to_sim()
     for _ in range(SUBSTEPS):
@@ -273,7 +283,9 @@ q0 = ref["dof_pos"][0].numpy().astype(np.float64)
 probe = dict(root_pos=[], root_quat=[], root_vel=[], root_ang_vel=[],
              dof_pos=[], dof_vel=[], q0=q0)
 st = read_state()
-tq0 = torch.tensor(q0[perm].reshape(1, -1), dtype=torch.float32,
+tq0_art = np.empty(29)
+tq0_art[perm] = q0
+tq0 = torch.tensor(tq0_art.reshape(1, -1), dtype=torch.float32,
                    device=DEVICE)
 x1.set_joint_position_target(tq0)
 x1.write_data_to_sim()
