@@ -177,12 +177,24 @@ def read_state():
                 root_quat=rq_xyzw, dof_pos=dp, dof_vel=dv)
 
 
+def raw_joint_state():
+    """Raw PhysX joint state (bypasses data-cache staleness), X1 order."""
+    j = x1.root_physx_view.get_joints()
+    pos = np.asarray(j[0], dtype=np.float64).reshape(-1)[:29][perm].copy()
+    vel = np.asarray(j[1], dtype=np.float64).reshape(-1)[:29][perm].copy()
+    return pos, vel
+
+
 inject_state(0)
+dp_exp = ref["dof_pos"][0].numpy().astype(np.float64)
+dv_exp = ref["dof_vel"][0].numpy().astype(np.float64)
 s0 = read_state()
-pos_dev = float(np.max(np.abs(s0["dof_pos"]
-                              - ref["dof_pos"][0].numpy().astype(np.float64))))
-vel_dev = float(np.max(np.abs(s0["dof_vel"]
-                              - ref["dof_vel"][0].numpy().astype(np.float64))))
+raw_pos, raw_vel = raw_joint_state()
+print(f"[x1-il] state0 sources: expected dp[:6] "
+      f"{np.round(dp_exp[:6], 4)} | data {np.round(s0['dof_pos'][:6], 4)} "
+      f"| raw {np.round(raw_pos[:6], 4)}", flush=True)
+pos_dev = float(np.max(np.abs(raw_pos - dp_exp)))
+vel_dev = float(np.max(np.abs(raw_vel - dv_exp)))
 print(f"[x1-il] state0 readback: dof_pos dev {pos_dev:.2e} "
       f"dof_vel dev {vel_dev:.2e} (must be < 1e-5)", flush=True)
 assert pos_dev < 1e-5 and vel_dev < 1e-5, "state0 misaligned"
@@ -190,6 +202,8 @@ assert pos_dev < 1e-5 and vel_dev < 1e-5, "state0 misaligned"
 traj = dict(root_pos=[], root_quat=[], root_vel=[], root_ang_vel=[],
             dof_pos=[], dof_vel=[])
 st = read_state()
+st["dof_pos"] = raw_pos  # t=0 from verified raw physics state
+st["dof_vel"] = raw_vel
 for t in range(N_ROLLOUT):
     traj["root_pos"].append(st["root_pos"])
     traj["root_quat"].append(st["root_quat_w"])
