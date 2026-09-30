@@ -93,7 +93,11 @@ TAG = os.environ["X1_PROBE_TAG"]
 CONTROL_MODE = os.environ["X1_PROBE_CONTROL_MODE"]
 PD_KD_MODE = os.environ.get("X1_PROBE_PD_KD_MODE", "explicit")
 IMPRATIO = os.environ["X1_PROBE_IMPRATIO"]
-DEVICE = "cuda:0"
+# task r1 (TASK_20260930_040) failed on GPU: CUDA graph capture uses
+# conditional graph nodes requiring driver 12.4+ (node has older).
+# CPU warp backend is semantics-equivalent for this probe (throughput
+# irrelevant); prereg device deviation disclosed in the report.
+DEVICE = os.environ.get("X1_PROBE_DEVICE", "cpu")
 
 # environment report (fail-fast per prereg §3)
 import newton  # noqa: E402
