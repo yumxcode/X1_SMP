@@ -121,7 +121,8 @@ os.makedirs(os.path.join(ROOT, "output"), exist_ok=True)
 open(urdf_path, "w").write(URDF_TEXT)
 
 sim_cfg = sim_utils.SimulationCfg(
-    device=DEVICE, dt=DT, gravity=(0.0, 0.0, -9.81), use_gpu_pipeline=True)
+    device=DEVICE, dt=DT, gravity=(0.0, 0.0, -9.81))  # r1: use_gpu_pipeline
+# kwarg removed in IsaacLab 3.x/6.x API
 sim = sim_utils.SimulationContext(sim_cfg)
 sim.set_camera_view(eye=(2.0, 2.0, 1.0), target=(0.0, 0.0, 0.0))
 
@@ -196,3 +197,8 @@ print(f"[il-probe] {TAG} step q0=0.2 qd[:4] "
       f"{[round(x, 4) for x in results['step']['0.2'][:4]]}", flush=True)
 
 simulation_app.close()
+# r1 lesson: AppLauncher may swallow exceptions -> exit code unreliable;
+# enforce explicit failure when the dump was not produced
+if not os.path.exists(out_path):
+    print("[il-probe] FATAL: dump not produced", flush=True)
+    sys.exit(1)
