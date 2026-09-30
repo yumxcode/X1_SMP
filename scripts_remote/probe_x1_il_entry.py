@@ -216,7 +216,6 @@ if os.environ.get("X1_IL_DIAG", "") == "1":
 # r7 diagnosis: code the 4 ambiguous all-zero wrist joints (+left_hip_yaw)
 # with unique values to pin their view slots (write in joint_names order).
 if os.environ.get("X1_IL_WRIST_CODED", "") == "1":
-    _coded = dict(dp_exp)  # not used; build per-art vector below
     _probe_vals = {"left_wrist_pitch_joint": 0.11,
                    "right_wrist_pitch_joint": 0.22,
                    "left_wrist_roll_joint": 0.33,
