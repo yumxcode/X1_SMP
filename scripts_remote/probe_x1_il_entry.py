@@ -123,6 +123,34 @@ art_cfg = ArticulationCfg(
 x1 = Articulation(art_cfg)
 sim.reset()
 
+# SW-PREREG-005b (F3, IDEA-014): friction-confound control. Read back
+# whether MjcfFileCfg imported MJCF frictionloss into PhysX joint friction;
+# optionally zero it (X1_IL_FRICTION_ZERO=1) and verify. Also read back
+# armature (IDEA-017 gap: injection path unverified).
+import warp as _wpx  # noqa: E402
+_view0 = x1.root_physx_view
+try:
+    _fric = (_wpx.to_torch(_view0.get_dof_friction_coefficients()).cpu()
+             .numpy().astype(np.float64).reshape(-1)[:29])
+    _arm = (_wpx.to_torch(_view0.get_dof_armatures()).cpu()
+            .numpy().astype(np.float64).reshape(-1)[:29])
+    print(f"[x1-il] friction_coefficients readback: "
+          f"min {_fric.min():.3f} max {_fric.max():.3f} "
+          f"(nonzero: {int((_fric != 0).sum())}/29)", flush=True)
+    print(f"[x1-il] armature readback (art order)[:8]: "
+          f"{np.round(_arm[:8], 4).tolist()}", flush=True)
+    if os.environ.get("X1_IL_FRICTION_ZERO", "") == "1":
+        _zeros = _wpx.zeros(29, dtype=_wpx.float32)
+        _view0.set_dof_friction_coefficients(_zeros)
+        _fric2 = (_wpx.to_torch(_view0.get_dof_friction_coefficients())
+                  .cpu().numpy().astype(np.float64).reshape(-1)[:29])
+        assert float(np.abs(_fric2).max()) == 0.0, "friction zeroing failed"
+        print("[x1-il] friction zeroed and verified (max 0.0)", flush=True)
+except Exception as exc:  # noqa: BLE001
+    print(f"[x1-il] FATAL: friction/armature readback failed: {exc}",
+          flush=True)
+    sys.exit(1)
+
 art_names = list(x1.joint_names)
 assert len(art_names) == 29, f"expected 29 joints, got {len(art_names)}"
 missing = [n for n in X1_DOF_ORDER if n not in art_names]
