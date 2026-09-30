@@ -54,49 +54,58 @@ print(f"[mj-scout] serial: {sps:,.0f} steps/s = {sps/120.0:,.0f} envs-equiv",
       flush=True)
 
 results = {}
-if has_rollout:
-    for nenv in (64, 256, 1024, 2048):
-        nstep = 480  # 4s of sim @120Hz per rollout call
-        try:
-            r = mj_rollout.Rollout(nthread=min(nenv, info["cpus"]))
-            # state dim differs across mujoco versions (3.1: nq+nv+na=71,
-            # 3.8 expects 72) -> probe once, adapt from the error message
-            sdim = m.nq + m.nv + m.na
-            init_state = np.zeros((nenv, sdim))
-            init_state[:, 2] = 0.6  # root height
-            ctrl = np.zeros((nenv, nstep, m.nu))
-            try:
-                r.rollout(model=m, data=None,
-                          initial_state=init_state[:1], control=ctrl[:1, :2])
-            except ValueError as exc:
-                import re as _re
-                mm = _re.search(r"must be (\d+)", str(exc))
-                if mm:
-                    sdim = int(mm.group(1))
-                    print(f"[mj-scout] state dim adapted to {sdim}",
-                          flush=True)
-                    init_state = np.zeros((nenv, sdim))
-                    init_state[:, 2] = 0.6
-            state = np.zeros((nenv, nstep, sdim))
-            # warmup once (data=None; a data list must have length nthread)
-            r.rollout(model=m, data=None,
-                      initial_state=init_state[:1], control=ctrl[:1, :2])
+info["rollout_class"] = None
+try:
+    import inspect
+    from mujoco import rollout as _rmod
+    if hasattr(_rmod, "Rollout"):
+        info["rollout_class"] = str(inspect.signature(_rmod.Rollout.rollout))[:500]
+except Exception as exc:  # noqa: BLE001
+    info["rollout_class_error"] = str(exc)
+
+# Multiprocess benchmark (engine-grade path): each worker owns an MjData and
+# runs serial control-step rollouts (servo semantics: ctrl=q_tar + 4x step).
+import multiprocessing as mp
+
+_XML = "data/assets/x1/x1_train_servo.xml"
+
+def _worker(args):
+    nenv, nctrl = args
+    import mujoco
+    import numpy as np
+    m = mujoco.MjModel.from_xml_path(_XML)
+    m.opt.timestep = 1.0 / 120.0
+    d = mujoco.MjData(m)
+    ctrl = np.zeros(m.nu)
+    for _ in range(100):
+        mujoco.mj_step(m, d)  # warmup
+    import time
+    t0 = time.perf_counter()
+    steps = 0
+    for _ in range(nctrl):
+        for _ in range(4):
+            d.ctrl[:] = ctrl
+            mujoco.mj_step(m, d)
+        steps += 4
+    return steps / (time.perf_counter() - t0)
+
+if __name__ == "__main__" or True:
+    ctx = mp.get_context("fork")
+    for nproc in (8, 16, 32, 64):
+        nctrl = 3000
+        with ctx.Pool(nproc) as pool:
             t0 = time.perf_counter()
-            r.rollout(model=m, data=None, initial_state=init_state,
-                      control=ctrl, state=state)
-            dt = time.perf_counter() - t0
-            steps = nenv * nstep
-            results[nenv] = dict(
-                wall_s=dt, total_steps=steps,
-                steps_per_s=steps / dt,
-                envs_equiv_30hz=steps / dt / 120.0)
-            print(f"[mj-scout] rollout nenv={nenv}: {steps/dt:,.0f} steps/s "
-                  f"= {steps/dt/120.0:,.0f} envs-equiv (wall {dt:.2f}s)",
-                  flush=True)
-        except Exception as exc:  # noqa: BLE001
-            results[nenv] = {"error": str(exc)}
-            print(f"[mj-scout] rollout nenv={nenv} FAILED: {exc}", flush=True)
-    info["rollout"] = results
+            rates = pool.map(_worker, [(1, nctrl)] * nproc)
+            wall = time.perf_counter() - t0
+        total = sum(rates)
+        results[f"mp_{nproc}"] = dict(
+            total_substeps_per_s=total,
+            envs_equiv_30hz=total / 120.0,
+            wall_s=wall)
+        print(f"[mj-scout] multiprocess nproc={nproc}: {total:,.0f} substeps/s "
+              f"= {total/120.0:,.0f} envs-equiv (per-proc mean "
+              f"{total/nproc:,.0f})", flush=True)
+    info["multiprocess"] = results
 
 os.makedirs("output", exist_ok=True)
 json.dump(info, open("output/mj_throughput_remote.json", "w"), indent=1)
