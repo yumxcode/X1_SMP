@@ -25,7 +25,14 @@ except Exception as exc:  # noqa: BLE001
 
 import numpy as np
 
-has_rollout = hasattr(mujoco, "rollout")
+# r1 lesson: mujoco.rollout is a SUBMODULE - hasattr(mujoco, "rollout")
+# is False until imported; must try explicit import.
+try:
+    from mujoco import rollout as mj_rollout
+    has_rollout = True
+except ImportError:
+    mj_rollout = None
+    has_rollout = False
 info["has_rollout"] = has_rollout
 print(f"[mj-scout] mujoco {mujoco.__version__} | cpus {info['cpus']} | "
       f"rollout {has_rollout}", flush=True)
@@ -46,10 +53,8 @@ info["serial_envs_equiv_30hz"] = sps / 120.0
 print(f"[mj-scout] serial: {sps:,.0f} steps/s = {sps/120.0:,.0f} envs-equiv",
       flush=True)
 
+results = {}
 if has_rollout:
-    from mujoco import rollout as mj_rollout
-
-    results = {}
     for nenv in (64, 256, 1024, 2048):
         nstep = 480  # 4s of sim @120Hz per rollout call
         try:
