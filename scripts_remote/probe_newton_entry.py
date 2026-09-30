@@ -70,7 +70,10 @@ def run_child(tag, control_mode, pd_kd_mode, impratio):
 if os.environ.get("X1_PROBE_CHILD", "") != "1":
     print("[newton-probe] driver start", flush=True)
     ok_all = True
+    only = os.environ.get("X1_PROBE_ONLY", "")
     for tag, mode, kd, imp in CONFIGS:
+        if only and tag != only:
+            continue
         ok_all &= run_child(tag, mode, kd, imp)
     sys.exit(0 if ok_all else 1)
 
@@ -124,7 +127,37 @@ def _apply_fixed_reset_patch():
     _de.DeepMimicEnv._sample_motion_times = _fixed_sample
 
 
+def _apply_pd_shape_diag_patch():
+    """r3 lesson: newton 1.2.1 Controls API drifted from the engine code
+    (written/tested against newton 1.0.0): tar_dof - dof_pos shapes not
+    broadcastable. Print all relevant shapes once, then re-raise."""
+    import warp as _wp
+    import engines.newton_engine as _ne
+
+    def _diag(self, sim_state, control):
+        q = sim_state.joint_q
+        qd = sim_state.joint_qd
+        tar = control.joint_target_pos
+        print(f"[newton-probe] SHAPES: joint_q {tuple(q.shape)} "
+              f"joint_qd {tuple(qd.shape)} "
+              f"joint_target_pos {tuple(tar.shape)} "
+              f"kp_raw {tuple(self._kp_raw.shape)} "
+              f"kd_raw {tuple(self._kd_raw.shape)} "
+              f"joint_f {tuple(control.joint_f.shape)} "
+              f"torque_lim {tuple(self._torque_lim_raw.shape)}", flush=True)
+        # also expose a small slice to see ordering
+        print(f"[newton-probe] q[:8]  {_wp.to_torch(q)[:8].tolist()}",
+              flush=True)
+        print(f"[newton-probe] tar[:8] {_wp.to_torch(tar)[:8].tolist()}",
+              flush=True)
+        raise RuntimeError("shape-diag-complete")
+
+    if os.environ.get("X1_PROBE_SHAPE_DIAG", "") == "1":
+        _ne.NewtonEngine._apply_pd_explicit_torque = _diag
+
+
 _apply_fixed_reset_patch()
+_apply_pd_shape_diag_patch()
 import envs.env_builder as env_builder  # noqa: E402
 import numpy as np  # noqa: E402
 import torch  # noqa: E402
