@@ -66,7 +66,7 @@ if has_rollout:
             init_state[:, 2] = 0.6  # root height
             ctrl = np.zeros((nenv, nstep, m.nu))
             try:
-                r.rollout(model=m, data=[mujoco.MjData(m)],
+                r.rollout(model=m, data=None,
                           initial_state=init_state[:1], control=ctrl[:1, :2])
             except ValueError as exc:
                 import re as _re
@@ -78,8 +78,8 @@ if has_rollout:
                     init_state = np.zeros((nenv, sdim))
                     init_state[:, 2] = 0.6
             state = np.zeros((nenv, nstep, sdim))
-            # warmup once
-            r.rollout(model=m, data=[mujoco.MjData(m)],
+            # warmup once (data=None; a data list must have length nthread)
+            r.rollout(model=m, data=None,
                       initial_state=init_state[:1], control=ctrl[:1, :2])
             t0 = time.perf_counter()
             r.rollout(model=m, data=None, initial_state=init_state,
