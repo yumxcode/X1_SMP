@@ -1,0 +1,15 @@
+{
+ "experiment": "isaaclab-asset-scout",
+ "task": "TASK_20260930_056",
+ "retrieved_at": "2026-09-30T16:34:08",
+ "source": "gm task logs TASK_20260930_056 (platform log readback; script scripts_remote/scout_isaaclab_assets.py commit 2b56bbe4)",
+ "log_md5": "f074f810ae4b",
+ "observations": [
+  "[scout] isaaclab 6.1.14",
+  "[scout] UrdfFileCfg: OK",
+  "[scout] MjcfFileCfg: OK",
+  "[scout] X1 MJCF loaded: joints 29 first ['lumbar_yaw_joint', 'left_hip_pitch_joint', 'right_hip_pitch_joint', 'lumbar_roll_joint', 'left_hip_roll_joint', 'right_hip_roll_joint', 'lumbar_pitch_joint', 'left_hip_yaw_joint']",
+  "[scout] dof_limits shape (1, 29, 2)"
+ ],
+ "conclusion": "MjcfFileCfg available in IsaacLab 6.1.14; x1_v4.xml direct-load OK: 29 joints, names correct (first 8 listed), dof_limits shape (1,29,2); URDF->USD conversion work package cancelled (zero-conversion asset route)"
+}
