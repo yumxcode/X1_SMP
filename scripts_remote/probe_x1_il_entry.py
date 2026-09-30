@@ -23,7 +23,7 @@ import sys
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 os.chdir(ROOT)
 
-TAG = "F1_implicit_v4"
+TAG = os.environ.get("X1_IL_TAG", "F1_implicit_v4")
 N_ROLLOUT = 30
 N_PROBE = 8
 SUBSTEPS = 4
@@ -41,6 +41,21 @@ GAIN_GROUPS = [
     (120.0, 4.0, 150.0, 0.02), (150.0, 4.0, 180.0, 0.02),
     (150.0, 5.0, 180.0, 0.02), (150.0, 8.0, 180.0, 0.02),
 ]
+# joint limits (lo, hi) in X1_DOF_ORDER order, computed from
+# data/assets/x1/x1_v4.xml locally (SW-PREREG-005a F2 variant).
+X1_LIMITS = [
+    [-1, 1], [-0.25, 0.25], [-0.15, 0.45],
+    [-2.5, 1.5], [-2, 0], [-1.8, 1.8],
+    [0, 2], [-1.8, 1.8], [-0.4, 0.4],
+    [-0.4, 0.4], [-2.5, 1.5], [-2, 0],
+    [-1.8, 1.8], [0, 2], [-1.8, 1.8],
+    [-0.4, 0.4], [-0.4, 0.4], [-1, 2],
+    [-1.5, 0.2], [-1.5, 1.5], [0, 2],
+    [-0.41, 0.35], [-0.64, 0.64], [-2, 1],
+    [-0.2, 1.5], [-1.5, 1.5], [0, 2],
+    [-0.41, 0.35], [-0.64, 0.64],
+]
+MARGIN = float(os.environ.get("X1_IL_MARGIN", "0"))
 
 sys.path.insert(0, os.path.join(ROOT, "tools/x1_pipeline"))
 from retarget_g1_x1 import X1_DOF_ORDER  # noqa: E402
@@ -149,6 +164,10 @@ def inject_state(frame=0):
     ra = ref["root_ang_vel"][frame].numpy().astype(np.float64)
     dp = ref["dof_pos"][frame].numpy().astype(np.float64)
     dv = ref["dof_vel"][frame].numpy().astype(np.float64)
+    if MARGIN > 0:
+        lo = np.array([l[0] for l in X1_LIMITS])
+        hi = np.array([l[1] for l in X1_LIMITS])
+        dp = np.clip(dp, lo + MARGIN, hi - MARGIN)
     # r8 root fix: write vector must be SCATTERED into joint_names order
     # (W[perm[i]] = dp[i]). The old dp[perm] was a double permutation -
     # roundtrip is identity (r6 V == dp[perm] bitwise; r7 wrist-coded
