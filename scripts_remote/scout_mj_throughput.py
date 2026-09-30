@@ -59,13 +59,28 @@ if has_rollout:
         nstep = 480  # 4s of sim @120Hz per rollout call
         try:
             r = mj_rollout.Rollout(nthread=min(nenv, info["cpus"]))
-            init_state = np.zeros((nenv, m.nq + m.nv + m.na))
+            # state dim differs across mujoco versions (3.1: nq+nv+na=71,
+            # 3.8 expects 72) -> probe once, adapt from the error message
+            sdim = m.nq + m.nv + m.na
+            init_state = np.zeros((nenv, sdim))
             init_state[:, 2] = 0.6  # root height
             ctrl = np.zeros((nenv, nstep, m.nu))
-            state = np.zeros((nenv, nstep, m.nq + m.nv + m.na))
+            try:
+                r.rollout(model=m, data=[mujoco.MjData(m)],
+                          initial_state=init_state[:1], control=ctrl[:1, :2])
+            except ValueError as exc:
+                import re as _re
+                mm = _re.search(r"must be (\d+)", str(exc))
+                if mm:
+                    sdim = int(mm.group(1))
+                    print(f"[mj-scout] state dim adapted to {sdim}",
+                          flush=True)
+                    init_state = np.zeros((nenv, sdim))
+                    init_state[:, 2] = 0.6
+            state = np.zeros((nenv, nstep, sdim))
             # warmup once
-            r.rollout(model=m, data=[mujoco.MjData(m) for _ in range(1)],
-                      initial_state=init_state[:1], control=ctrl[:1, :8])
+            r.rollout(model=m, data=[mujoco.MjData(m)],
+                      initial_state=init_state[:1], control=ctrl[:1, :2])
             t0 = time.perf_counter()
             r.rollout(model=m, data=None, initial_state=init_state,
                       control=ctrl, state=state)
