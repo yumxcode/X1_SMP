@@ -102,9 +102,15 @@ DEVICE = os.environ.get("X1_PROBE_DEVICE", "cpu")
 # environment report (fail-fast per prereg §3)
 import newton  # noqa: E402
 import warp  # noqa: E402
+if DEVICE == "cpu":
+    # r2 lesson: engine graph capture checks wp.get_device() (GLOBAL warp
+    # device), not the device passed to finalize() -> must set globally,
+    # otherwise capture still runs on cuda and hits the driver-12.4 assert
+    warp.set_device("cpu")
 print(f"[newton-probe] newton version {getattr(newton, '__version__', '?')} "
       f"| warp version {getattr(warp, '__version__', '?')} "
-      f"| warp device {warp.get_device()}", flush=True)
+      f"| warp device {warp.get_device()} | probe device {DEVICE}",
+      flush=True)
 
 
 def _apply_fixed_reset_patch():
