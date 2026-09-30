@@ -1,7 +1,7 @@
 {
  "experiment": "E-ISAAC-SOLVER-01",
  "prereg": "SW-PREREG-002 (commit a703fbb4)",
- "task": "TASK_20260930_031",
+ "task": "TASK_20260930_038 (r4 clean verdict; harness iterations: 031 r1 path-bug, 032 r2 aliasing, 034 r3 aliasing, 035 diag)",
  "failed": [],
  "valid": [
   "pgs32_0_cpu",
@@ -367,5 +367,6 @@
  },
  "verdict": "H2''_supported",
  "verdict_detail": "all 6 cpu configs >= 6.0 (max 30.113)",
- "prereg_bands": "any_cpu<2.0->H2' / all_cpu>=6.0->H2'' / grey"
+ "prereg_bands": "any_cpu<2.0->H2' / all_cpu>=6.0->H2'' / grey",
+ "task_field_fix_note": "original hardcoded TASK_20260930_031 was stale; corrected per verify 2026-09-30; no metric values changed"
 }
