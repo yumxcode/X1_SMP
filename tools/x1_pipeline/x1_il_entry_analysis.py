@@ -153,9 +153,12 @@ def main():
                context=dict(sw_r006_single_joint_S1=0.0937, S2=0.2586,
                             sw_r004_isaac_gym=26.057,
                             sw_r005_newton=19.120))
-    tag = DUMP.rsplit("_", 2)[0] if "F2" in DUMP else "x1_il_entry"
-    out_name = ("x1_il_entry_F2_analysis.json" if "F2" in DUMP
-                else "x1_il_entry_analysis.json")
+    if "F3" in DUMP:
+        out_name = "x1_il_entry_F3_analysis.json"
+    elif "F2" in DUMP:
+        out_name = "x1_il_entry_F2_analysis.json"
+    else:
+        out_name = "x1_il_entry_analysis.json"
     (REPO / "output" / out_name).write_text(json.dumps(out, indent=1))
     print(f"[x1a] saved output/{out_name}")
 
