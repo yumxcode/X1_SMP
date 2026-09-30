@@ -1,0 +1,53 @@
+{
+ "experiment": "H-X1-IL-full-entry-probe",
+ "prereg": "SW-PREREG-005 (commit 15151d1a)",
+ "first_step_max": 19.027734350329894,
+ "mean_rms": 42.39073137124052,
+ "probe_first": 19.08817509426358,
+ "worst_joint": "left_elbow_pitch_joint",
+ "per_joint": {
+  "lumbar_yaw_joint": 2.198584948259688,
+  "lumbar_roll_joint": 1.5815248570195979,
+  "lumbar_pitch_joint": 3.671957326616603,
+  "left_shoulder_pitch_joint": 4.650435297557841,
+  "left_shoulder_roll_joint": 5.223300953913903,
+  "left_shoulder_yaw_joint": 6.507485302524497,
+  "left_elbow_pitch_joint": 18.806409673345186,
+  "left_elbow_yaw_joint": 15.55068635591875,
+  "left_wrist_pitch_joint": 0.9791459953204865,
+  "left_wrist_roll_joint": 1.6247259181985063,
+  "right_shoulder_pitch_joint": 4.914526922879284,
+  "right_shoulder_roll_joint": 4.466550752690451,
+  "right_shoulder_yaw_joint": 4.80325504888551,
+  "right_elbow_pitch_joint": 13.9773412925988,
+  "right_elbow_yaw_joint": 10.580822953784896,
+  "right_wrist_pitch_joint": 1.0243590534770424,
+  "right_wrist_roll_joint": 0.47658247257629305,
+  "left_hip_pitch_joint": 4.635035181626923,
+  "left_hip_roll_joint": 2.9078830483563363,
+  "left_hip_yaw_joint": 6.304859973299236,
+  "left_knee_pitch_joint": 11.410515398003136,
+  "left_ankle_pitch_joint": 4.72135635873724,
+  "left_ankle_roll_joint": 4.459469889795326,
+  "right_hip_pitch_joint": 7.651128952341661,
+  "right_hip_roll_joint": 2.4672473753030912,
+  "right_hip_yaw_joint": 5.296694907532979,
+  "right_knee_pitch_joint": 8.070238604168978,
+  "right_ankle_pitch_joint": 1.8812869140431485,
+  "right_ankle_roll_joint": 4.86687510635388
+ },
+ "families": {
+  "elbow": 14.728815068911908,
+  "wrist": 1.026203359893082,
+  "hip_pitch": 6.143082066984292,
+  "leg_contact": 5.238642757559336
+ },
+ "verdict": "H_X1_IL_REFUTED",
+ "verdict_detail": "first-step 19.028 >= 2.0 -> MuJoCo-native sole primary per preregistered chain",
+ "context": {
+  "sw_r006_single_joint_S1": 0.0937,
+  "S2": 0.2586,
+  "sw_r004_isaac_gym": 26.057,
+  "sw_r005_newton": 19.12
+ }
+}

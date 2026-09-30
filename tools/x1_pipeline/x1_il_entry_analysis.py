@@ -30,7 +30,8 @@ sys.path.insert(0, str(REPO / "tools/x1_pipeline"))
 import mujoco  # noqa: E402
 from retarget_g1_x1 import X1_DOF_ORDER  # noqa: E402
 
-DUMP = "output/remote_ckpt/x1_il_entry_F1_implicit_v4.pt"
+DUMP = (sys.argv[1] if len(sys.argv) > 1 else
+        "output/remote_ckpt/x1_il_entry_F1_implicit_v4.pt")
 N_STEPS = 30
 
 
@@ -152,8 +153,11 @@ def main():
                context=dict(sw_r006_single_joint_S1=0.0937, S2=0.2586,
                             sw_r004_isaac_gym=26.057,
                             sw_r005_newton=19.120))
-    (REPO / "output/x1_il_entry_analysis.json").write_text(json.dumps(out, indent=1))
-    print("[x1a] saved output/x1_il_entry_analysis.json")
+    tag = DUMP.rsplit("_", 2)[0] if "F2" in DUMP else "x1_il_entry"
+    out_name = ("x1_il_entry_F2_analysis.json" if "F2" in DUMP
+                else "x1_il_entry_analysis.json")
+    (REPO / "output" / out_name).write_text(json.dumps(out, indent=1))
+    print(f"[x1a] saved output/{out_name}")
 
 
 if __name__ == "__main__":

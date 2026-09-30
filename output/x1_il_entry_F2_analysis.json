@@ -1,0 +1,53 @@
+{
+ "experiment": "H-X1-IL-full-entry-probe",
+ "prereg": "SW-PREREG-005 (commit 15151d1a)",
+ "first_step_max": 19.017743740236558,
+ "mean_rms": 42.4435847189171,
+ "probe_first": 19.06775072142027,
+ "worst_joint": "left_elbow_pitch_joint",
+ "per_joint": {
+  "lumbar_yaw_joint": 2.2383458560854232,
+  "lumbar_roll_joint": 1.5779626741056814,
+  "lumbar_pitch_joint": 3.7258291003955306,
+  "left_shoulder_pitch_joint": 4.874933544662878,
+  "left_shoulder_roll_joint": 5.228249403435319,
+  "left_shoulder_yaw_joint": 6.56318164413702,
+  "left_elbow_pitch_joint": 18.77978156954154,
+  "left_elbow_yaw_joint": 15.457025517898087,
+  "left_wrist_pitch_joint": 0.9678016607431161,
+  "left_wrist_roll_joint": 1.731161949116716,
+  "right_shoulder_pitch_joint": 4.807839332884696,
+  "right_shoulder_roll_joint": 4.540940922262846,
+  "right_shoulder_yaw_joint": 4.841817515836971,
+  "right_elbow_pitch_joint": 13.866459326020333,
+  "right_elbow_yaw_joint": 10.657648693247177,
+  "right_wrist_pitch_joint": 1.0602362850973934,
+  "right_wrist_roll_joint": 0.4435637279853696,
+  "left_hip_pitch_joint": 4.632336407209313,
+  "left_hip_roll_joint": 2.9717833323311003,
+  "left_hip_yaw_joint": 6.350129514136331,
+  "left_knee_pitch_joint": 11.448640305785391,
+  "left_ankle_pitch_joint": 4.673244243912794,
+  "left_ankle_roll_joint": 4.416072648587872,
+  "right_hip_pitch_joint": 7.741523019144254,
+  "right_hip_roll_joint": 2.5206871785506317,
+  "right_hip_yaw_joint": 5.260638158797037,
+  "right_knee_pitch_joint": 8.202762630518786,
+  "right_ankle_pitch_joint": 1.9432958850447173,
+  "right_ankle_roll_joint": 4.873309577795371
+ },
+ "families": {
+  "elbow": 14.690228776676785,
+  "wrist": 1.0506909057356488,
+  "hip_pitch": 6.1869297131767835,
+  "leg_contact": 5.266056347546003
+ },
+ "verdict": "H_X1_IL_REFUTED",
+ "verdict_detail": "first-step 19.018 >= 2.0 -> MuJoCo-native sole primary per preregistered chain",
+ "context": {
+  "sw_r006_single_joint_S1": 0.0937,
+  "S2": 0.2586,
+  "sw_r004_isaac_gym": 26.057,
+  "sw_r005_newton": 19.12
+ }
+}
