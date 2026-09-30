@@ -155,11 +155,35 @@ def _apply_solver_patch():
     _ige.IsaacGymEngine._build_sim_params = _bsp
 
 
+def _apply_fixed_reset_patch():
+    """Deterministic reset across configs AND devices (r2 lesson).
+
+    r1 scan (TASK_20260930_032) obs0 self-check failed: sample_motions
+    uses torch.multinomial on the DEVICE tensor (cpu/cuda RNG streams
+    differ even under identical seeds) and sample_time uses torch.rand on
+    device. Pin both to (motion 0, time 0) so every config starts from the
+    exact same ref state; the character always resets to the fixed home
+    pose (char_env._reset_char), making the full reset deterministic.
+    """
+    import envs.deepmimic_env as _de
+
+    def _fixed_sample(self, n):
+        ids = torch.zeros(n, dtype=torch.long, device=self._device)
+        times = torch.zeros(n, dtype=torch.float, device=self._device)
+        return ids, times
+    _de.DeepMimicEnv._sample_motion_times = _fixed_sample
+
+
 _apply_pdx2_patches()
 _apply_solver_patch()
+_apply_fixed_reset_patch()
 import envs.env_builder as env_builder  # noqa: E402
 import numpy as np  # noqa: E402
 import torch  # noqa: E402
+torch.manual_seed(0)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed_all(0)
+np.random.seed(0)
 import learning.agent_builder as agent_builder  # noqa: E402
 from learning.base_agent import AgentMode  # noqa: E402
 
@@ -203,7 +227,8 @@ kd = np.asarray(kd, dtype=np.float64)
 tlim = np.asarray(to_np(e.get_obj_torque_limits(0, char_id)), dtype=np.float64)
 
 traj = dict(obs=[], root_pos=[], root_quat=[], root_vel=[],
-            root_ang_vel=[], dof_pos=[], dof_vel=[], action=[], q_tar=[])
+            root_ang_vel=[], dof_pos=[], dof_vel=[], action=[], q_tar=[],
+            done=[])
 for t in range(N_ROLLOUT):
     action, _ = agent._decide_action(agent._curr_obs, agent._curr_info)
     traj["obs"].append(to_np(agent._curr_obs[0]))
@@ -217,7 +242,11 @@ for t in range(N_ROLLOUT):
     nobs, r, done, info = agent._step_env(action)
     traj["q_tar"].append(np.asarray(to_np(e._get_dof_cmd_buf()[0]),
                                     dtype=np.float64))
+    traj["done"].append(np.asarray(to_np(done), dtype=np.float64).reshape(-1))
     agent._curr_obs, agent._curr_info = agent._reset_done_envs(done)
+
+print(f"[solver-scan] reset: motion_id {int(to_np(env._motion_ids[0]))} "
+      f"time_offset {float(to_np(env._motion_time_offsets[0])):.4f}", flush=True)
 
 # ---- zero-error probe (addendum5): q_tar pinned at q0 ----
 agent._curr_obs, agent._curr_info = agent._reset_envs()
