@@ -215,10 +215,16 @@ agent._curr_obs, agent._curr_info = agent._reset_envs()
 
 
 def to_np(x):
+    # MUST copy: on CPU pipeline the engine tensors are shared gymtorch
+    # views; .cpu() on an already-CPU tensor is a no-op and .numpy()
+    # returns a LIVE view - without copy() every "snapshot" aliases the
+    # same buffer and the whole trajectory collapses to the final state
+    # (r1/r3 CPU-config dumps were corrupted this way; GPU configs were
+    # fine because .cpu() copies across devices).
     try:
-        return torch.as_tensor(x).detach().cpu().numpy()
+        return torch.as_tensor(x).detach().cpu().numpy().copy()
     except Exception:
-        return np.asarray(x)
+        return np.array(x)
 
 
 kp, kd = e.get_obj_pd_gains(0, char_id)
